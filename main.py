@@ -18,7 +18,7 @@ nt.add_edges_from([
     ("V6", "V8"),
 ])
 
-main_mif(nt, set())
+main_mif(nt, nt.nodes["V6"].keys())
 
 # graph = Network()
 # graph.inherit_edge_colors(False)
