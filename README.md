@@ -1,1 +1,1 @@
-# Optimisation de la recherche du Feedback Vertex Set minimum dans les graphes
+# Optimisation de la recherche du Maximum Induced Forest ou du Decyling Number dans les graphes
