@@ -2,7 +2,6 @@ import networkx as nx
 from pyvis.network import Network
 from exact_mif import main_mif
 
-
 nt = nx.Graph()
 nt.add_nodes_from(["V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"])
 nt.add_edges_from([
@@ -22,7 +21,8 @@ main_mif(nt, nt.nodes["V6"].keys())
 
 # graph = Network()
 # graph.inherit_edge_colors(False)
+# graph.options.edges.smooth.enabled = False
 # graph.from_nx(nt)
-# graph.get_node("A")["color"] = "green"
+# graph.get_node("V6")["color"] = "green"
 #
 # graph.show("graph.html", notebook=False)

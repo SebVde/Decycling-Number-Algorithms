@@ -11,6 +11,14 @@ class CycleDetected(Exception):
 
 
 def get_cnf(G, T):
+    """
+Computes the set of conflicting vertices in G that are not in T but have at least 2 neighbors in a same connected
+component of the subgraph of G induced by T.
+    :param G: a networkx graph
+    :param T: a subset of vertices in G
+    :return: a set of vertices representing the conflicting vertices
+    """
+
     cnf = set()
     components = list(nx.connected_components(nx.subgraph(G, T)))
 
@@ -23,12 +31,19 @@ def get_cnf(G, T):
             neighbors_in_comp = set(nx.neighbors(G, v)) & comp  # & = intersection
             if len(neighbors_in_comp) >= 2:
                 cnf.add(v)
-                break
+                break  # Because v only needs to have 2 neighbors in one of the components to be considered conflicting
 
     return cnf
 
 
 def get_bnd(G, T):
+    """
+Computes the boundary vertices of T in G ie the vertices that are not in T but have exactly one neighbor in T.
+    :param G: a networkx graph
+    :param T: a subset of vertices in G
+    :return: a set of vertices representing the boundary vertices of T in G
+    """
+
     bnd = set()
 
     for v in G.nodes():
@@ -44,7 +59,15 @@ def get_bnd(G, T):
 
 
 def get_K_connected(G, K, v):
-    # Computes the subset of vertices in K that are K-connected to v
+    """
+Computes the subset of vertices in K that are K-connected to v.
+To be K-connected to v, a vertex u in K must have a path to v in G.
+    :param G: a networkx graph
+    :param K: a subset of vertices in G
+    :param v: a vertex in G
+    :return: a set of vertices representing the K-connected vertices to v
+    """
+
     result = set()
     for u in K:
         if nx.has_path(G, u, v):
@@ -55,10 +78,11 @@ def get_K_connected(G, K, v):
 
 def T_update(G, T, K, v):
     S = get_K_connected(G, K, v)
-    new_T = T | S | {v}
-    new_K = K - S - {v}
+    new_T = T | S | {v}  # Update T with the K-connected vertices and v
+    new_K = K - S - {v}  # Update K by removing the K-connected vertices and v
     sg_nodes = G.nodes - get_cnf(G, new_T)
-    sg = nx.subgraph(G, sg_nodes)
+    sg = nx.subgraph(G, sg_nodes)  # Create a subgraph induced by the nodes that are not conflicting with the new T
+    # All these conflicting vertices are removed because they would create cycles in the subgraph
     return sg, new_T, new_K
 
 
@@ -83,10 +107,18 @@ def K_update(G, T, K, W):
                 return nx.subgraph(new_G, sg_nodes), new_T, new_K | {v2}
 
     else:
-        return None  # If the subgraph is not a forest, return Fail
+        return None  # If the subgraph contains cycles
 
 
 def find_mif(G, T, K):
+    """
+    Searches for a (T union K)-MIF of the graph G.
+    :param G: a networkx graph
+    :param T: a subset of vertices in G
+    :param K: a subset of vertices in G
+    :return: a set of vertices representing a (T union K)-MIF of G
+    """
+
     if T | K == set(G.nodes):
         return T | K
 
@@ -114,7 +146,7 @@ def find_mif(G, T, K):
                 return new_S
             case 2:
                 sg = nx.subgraph(G, G.nodes - {v})
-                result = K_update(sg, new_T, new_K, W)
+                result = K_update(sg, T, K, W)
                 if result is not None:
                     return max(new_S, find_mif(*result), key=lambda x: len(x))
                 else:
@@ -128,15 +160,24 @@ def find_mif(G, T, K):
 
 
 def main_mif(G, K):
+    """
+Main function to find a K-MIF of a graph G.
+Given a subset K of V(G), a K-MIF is a largest superset of K such that the subgraph of G induced by K is acyclic.
+    :param G: a networkx graph
+    :param K: a subset of vertices in G
+    :raises CycleDetected: if the subgraph induced by K contains cycles
+    :return: a set of vertices representing a K-MIF of G
+    """
+
     if len(K) == 0 or nx.is_forest(nx.subgraph(G, K)):
         sg_nodes = G.nodes - get_cnf(G, K)
         sg = nx.subgraph(G, sg_nodes)
         result = sorted(find_mif(sg, set(), K))
 
-        print("MIF found:", result)
+        print("K-MIF found:", result)
         return result
 
     else:
         raise CycleDetected(
-            "The subgraph induced by the given K should NOT contain cycles"
+            "No K-MIF of G can be found because the subgraph induced by K contains cycles."
         )
