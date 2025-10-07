@@ -171,10 +171,14 @@ Given a subset K of V(G), a K-MIF is a largest superset of K such that the subgr
     if len(K) == 0 or nx.is_forest(nx.subgraph(G, K)):
         sg_nodes = G.nodes - get_cnf(G, K)
         sg = nx.subgraph(G, sg_nodes)
-        result = len(G.nodes) - find_mif_len(sg, set(), K)
+        result = find_mif_len(sg, set(), K)
         return result
 
     else:
         raise CycleDetected(
             "No K-MIF of G can be found because the subgraph induced by K contains cycles."
         )
+
+
+def get_decycling_number_mif(G):
+    return len(G.nodes) - get_mif_len(G, set())
