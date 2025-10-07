@@ -1,6 +1,6 @@
 import networkx as nx
 from pyvis.network import Network
-from exact_mif import main_mif
+from exact_mif import get_mif_len
 from naive import get_decycling_number
 
 nt = nx.erdos_renyi_graph(12, 0.89)
@@ -20,7 +20,7 @@ nt = nx.erdos_renyi_graph(12, 0.89)
 #     ("V6", "V8"),
 # ])
 
-print(len(nt.nodes) - len(main_mif(nt, set())))
+print(get_mif_len(nt, set()))
 print(get_decycling_number(nt))
 
 # graph = Network()
