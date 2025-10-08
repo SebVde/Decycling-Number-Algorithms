@@ -110,17 +110,17 @@ def K_update(G, T, K, W):
         return None  # If the subgraph contains cycles
 
 
-def find_mif(G, T, K):
+def find_mif_len(G, T, K):
     """
-    Searches for a (T union K)-MIF of the graph G.
+    Searches for the length of a (T union K)-MIF of the graph G.
     :param G: a networkx graph
     :param T: a subset of vertices in G
     :param K: a subset of vertices in G
-    :return: a set of vertices representing a (T union K)-MIF of G
+    :return: the length of a (T union K)-MIF of G
     """
 
     if T | K == set(G.nodes):
-        return T | K
+        return len(T | K)
 
     else:
         v = None
@@ -131,7 +131,7 @@ def find_mif(G, T, K):
             v = random.choice(list(G.nodes - (T | K)))
 
         new_G, new_T, new_K = T_update(G, T, K, v)
-        new_S = find_mif(new_G, new_T, new_K)
+        new_S = find_mif_len(new_G, new_T, new_K)
 
         W = get_K_connected(
             nx.subgraph_view(
@@ -148,36 +148,37 @@ def find_mif(G, T, K):
                 sg = nx.subgraph(G, G.nodes - {v})
                 result = K_update(sg, T, K, W)
                 if result is not None:
-                    return max(new_S, find_mif(*result), key=lambda x: len(x))
+                    return max(new_S, find_mif_len(*result))
                 else:
                     return new_S
             case _:
                 return max(
                     new_S,
-                    find_mif(nx.subgraph(G, G.nodes - {v}), T, K),
-                    key=lambda x: len(x),
+                    find_mif_len(nx.subgraph(G, G.nodes - {v}), T, K),
                 )
 
 
-def main_mif(G, K):
+def get_mif_len(G, K):
     """
-Main function to find a K-MIF of a graph G.
+Main function to get the length of a K-MIF of a graph G.
 Given a subset K of V(G), a K-MIF is a largest superset of K such that the subgraph of G induced by K is acyclic.
     :param G: a networkx graph
     :param K: a subset of vertices in G
     :raises CycleDetected: if the subgraph induced by K contains cycles
-    :return: a set of vertices representing a K-MIF of G
+    :return: the length of a K-MIF of G
     """
 
     if len(K) == 0 or nx.is_forest(nx.subgraph(G, K)):
         sg_nodes = G.nodes - get_cnf(G, K)
         sg = nx.subgraph(G, sg_nodes)
-        result = sorted(find_mif(sg, set(), K))
-
-        print("K-MIF found:", result)
+        result = find_mif_len(sg, set(), K)
         return result
 
     else:
         raise CycleDetected(
             "No K-MIF of G can be found because the subgraph induced by K contains cycles."
         )
+
+
+def get_decycling_number_mif(G):
+    return len(G.nodes) - get_mif_len(G, set())
