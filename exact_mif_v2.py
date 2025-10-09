@@ -113,8 +113,24 @@ def get_max_indep_set(G):
     )
 
 
+def preprocess(G, F):
+    if nx.number_connected_components(G) > 1:
+        res = 0
+        for c in nx.connected_components(G):
+            if nx.is_forest(c):
+                res += len(c.nodes)
+            else:
+                res += get_mif_len(c, set())
+
+        return res
+
+    sg_F = nx.subgraph(G, F)
+    if len(sg_F.edges) != 0:
+        pass
+
+
 def get_mif_len(G, F):
-    if nx.is_forest(G) or F == set(G.nodes):
+    if F == set(G.nodes):
         return len(G.nodes)
 
     if len(F) == 0:
