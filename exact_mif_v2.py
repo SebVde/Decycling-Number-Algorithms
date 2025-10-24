@@ -122,23 +122,24 @@ def get_max_indep_set(G):
     )
 
 
-def preprocess(G, F, active_vertex):
+def get_mif_len(G, F, active_v):
     if nx.number_connected_components(G) > 1:
         res = 0
         for c in nx.connected_components(G):
-            if nx.is_forest(c):
-                res += len(c.nodes)
+            if nx.is_forest(nx.subgraph(G, c)):
+                res += len(c)
             else:
-                res += get_mif_len(c, set())
+                res += get_mif_len(nx.subgraph(G, c), set(), active_v)
 
         return res
 
     sg_F = nx.subgraph(G, F)
     new_G = G.copy(as_view=False)
+    new_F = F.copy()
     # Verify is F is acyclic?
-    if len(sg_F.edges) != 0:
+    if len(sg_F.edges) != 0: # If F is not independent (if not every component of G[F] is an isolated vertex)
         for T in get_non_trivial_components(sg_F):
-            # Get all neigbors of T in G and need to remove those with more than 1 connection to T
+            # Get all neighbors of T in G and need to remove those with more than 1 connection to T
             nb_T = set()
             for v in T:
                 nb_T.update(set(G.neighbors(v)))
@@ -154,14 +155,21 @@ def preprocess(G, F, active_vertex):
             new_G = nx.contracted_nodes(G, v_T, T - {v_T}, self_loops=False)
             new_G = nx.subgraph(new_G, new_G.nodes - vertices_to_remove)
 
-            if (active_vertex is not None) and (active_vertex in T):
-                new_active_vertex = v_T
+            if (active_v is not None) and (active_v in T):
+                new_active_v = v_T
 
-        F_prime = F
-        return
+            new_F -= T
+            new_F.add(v_T)
+
+        return get_mif_len(new_G, new_F, active_v) + len(F-new_F)
+
+    else:
+        return main_procedure(G, F, active_v)
 
 
-def get_mif_len(G, F, active_vertex=None):
+
+def main_procedure(G, F, active_v):
+
     if F == set(G.nodes):
         return len(G.nodes)
 
@@ -173,30 +181,24 @@ def get_mif_len(G, F, active_vertex=None):
         else:
             t = next(n for n, d in G.degree() if d >= 2)
             new_G = nx.subgraph(G, G.nodes - {t})
-            return max(get_mif_len(G, F | {t}), get_mif_len(new_G, F))
+            return max(get_mif_len(G, F | {t}, active_v), get_mif_len(new_G, F, active_v))
 
-    t = random.choice(list(F))
-    nb = nx.neighbors(G, t)
+    if active_v is None:
+        active_v = random.choice(list(F))
+
+    nb = nx.neighbors(G, active_v)
     if G.nodes - F == nb:
-        return len(F) + get_max_indep_set(construct_H(G, F - {t}, nb))
+        return len(F) + get_max_indep_set(construct_H(G, F - {active_v}, nb))
+
+    for v in nb:
+        # TODO bien comprendre generalized neighbor et degree
+        pass
 
     pass
 
 
 def get_decycling_number_mif_v2(G):
-    # TODO preprocessing must be done at each call of get_mif_len
     if nx.is_forest(G):
         return 0
 
-    if nx.number_connected_components(G) > 1:
-        res = 0
-        for c in nx.connected_components(G):
-            if nx.is_forest(c):
-                res += len(c.nodes)
-            else:
-                res += get_mif_len(c, set())
-
-        return len(G.nodes) - res
-
-    else:
-        return len(G.nodes) - get_mif_len(G, set())
+    return len(G.nodes) - get_mif_len(G, set(), None)
