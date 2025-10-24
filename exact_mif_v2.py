@@ -3,6 +3,15 @@ import random
 import itertools
 
 
+def get_non_trivial_components(G):
+    components = set()
+    for c in nx.connected_components(G):
+        if len(c) > 1:
+            components.add(c)
+
+    return components
+
+
 def construct_H(G, F, nb):
     H = nx.subgraph(G, nb)
     for u, v in itertools.combinations(nb, 2):
@@ -113,7 +122,7 @@ def get_max_indep_set(G):
     )
 
 
-def preprocess(G, F):
+def preprocess(G, F, active_vertex):
     if nx.number_connected_components(G) > 1:
         res = 0
         for c in nx.connected_components(G):
@@ -125,11 +134,34 @@ def preprocess(G, F):
         return res
 
     sg_F = nx.subgraph(G, F)
+    new_G = G.copy(as_view=False)
+    # Verify is F is acyclic?
     if len(sg_F.edges) != 0:
-        pass
+        for T in get_non_trivial_components(sg_F):
+            # Get all neigbors of T in G and need to remove those with more than 1 connection to T
+            nb_T = set()
+            for v in T:
+                nb_T.update(set(G.neighbors(v)))
+            nb_T -= T
+            vertices_to_remove = set()
+            for v in nb_T:
+                connections = sum(1 for u in T if G.has_edge(u, v))
+                if connections > 1:
+                    vertices_to_remove.add(v)
+
+            v_T = random.choice(list(T))
+
+            new_G = nx.contracted_nodes(G, v_T, T - {v_T}, self_loops=False)
+            new_G = nx.subgraph(new_G, new_G.nodes - vertices_to_remove)
+
+            if (active_vertex is not None) and (active_vertex in T):
+                new_active_vertex = v_T
+
+        F_prime = F
+        return
 
 
-def get_mif_len(G, F):
+def get_mif_len(G, F, active_vertex=None):
     if F == set(G.nodes):
         return len(G.nodes)
 
