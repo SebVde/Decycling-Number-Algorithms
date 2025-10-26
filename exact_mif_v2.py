@@ -4,18 +4,18 @@ import itertools
 
 
 def get_non_trivial_components(G):
-    components = set()
+    components = []
     for c in nx.connected_components(G):
         if len(c) > 1:
-            components.add(c)
+            components.append(c)
 
     return components
 
 
 def construct_H(G, F, nb):
-    H = nx.subgraph(G, nb)
+    H = nx.subgraph(G, nb).copy()
     for u, v in itertools.combinations(nb, 2):
-        if len(set(nx.common_neighbors(G, u, v)) - F) > 0:
+        if not set(nx.common_neighbors(G, u, v)).isdisjoint(F):
             H.add_edge(u, v)
 
     return H
@@ -43,7 +43,7 @@ def get_anti_edges(G, v):
 
 def fold_graph(G, v, anti_edges):
     nb_v = nx.neighbors(G, v)
-    folded_G = nx.subgraph(G, G.nodes - nb_v - {v})
+    folded_G = nx.subgraph(G, G.nodes - nb_v - {v}).copy()
     added_nodes = set()
 
     for i, j in anti_edges:
@@ -122,6 +122,17 @@ def get_max_indep_set(G):
     )
 
 
+def get_generalized_neighbors(G, F, active_v, v):
+    K = {u for u in (F - {active_v}) if G.has_edge(u, v)}
+    new_G = G.copy()
+
+    for n in K:
+        new_G = nx.contracted_nodes(new_G, v, n, self_loops=False)
+
+    gen_nb = set(new_G.neighbors(v)) - {active_v}
+    return gen_nb
+
+
 def get_mif_len(G, F, active_v):
     if nx.number_connected_components(G) > 1:
         res = 0
@@ -129,15 +140,19 @@ def get_mif_len(G, F, active_v):
             if nx.is_forest(nx.subgraph(G, c)):
                 res += len(c)
             else:
-                res += get_mif_len(nx.subgraph(G, c), set(), active_v)
+                res += get_mif_len(
+                    nx.subgraph(G, c), F & set(c), active_v if active_v in c else None
+                )
 
         return res
 
     sg_F = nx.subgraph(G, F)
-    new_G = G.copy(as_view=False)
+    new_G = G.copy()
     new_F = F.copy()
     # Verify is F is acyclic?
-    if len(sg_F.edges) != 0: # If F is not independent (if not every component of G[F] is an isolated vertex)
+    if (
+        len(sg_F.edges) != 0
+    ):  # If F is not independent (if not every component of G[F] is an isolated vertex)
         for T in get_non_trivial_components(sg_F):
             # Get all neighbors of T in G and need to remove those with more than 1 connection to T
             nb_T = set()
@@ -152,20 +167,21 @@ def get_mif_len(G, F, active_v):
 
             v_T = random.choice(list(T))
 
-            new_G = nx.contracted_nodes(G, v_T, T - {v_T}, self_loops=False)
+            for n in T - {v_T}:
+                new_G = nx.contracted_nodes(new_G, v_T, n, self_loops=False)
+
             new_G = nx.subgraph(new_G, new_G.nodes - vertices_to_remove)
 
             if (active_v is not None) and (active_v in T):
-                new_active_v = v_T
+                active_v = v_T
 
             new_F -= T
             new_F.add(v_T)
 
-        return get_mif_len(new_G, new_F, active_v) + len(F-new_F)
+        return get_mif_len(new_G, new_F, active_v) + len(F - new_F)
 
     else:
         return main_procedure(G, F, active_v)
-
 
 
 def main_procedure(G, F, active_v):
@@ -181,20 +197,71 @@ def main_procedure(G, F, active_v):
         else:
             t = next(n for n, d in G.degree() if d >= 2)
             new_G = nx.subgraph(G, G.nodes - {t})
-            return max(get_mif_len(G, F | {t}, active_v), get_mif_len(new_G, F, active_v))
+            return max(
+                get_mif_len(G, F | {t}, active_v), get_mif_len(new_G, F, active_v)
+            )
 
     if active_v is None:
         active_v = random.choice(list(F))
 
-    nb = nx.neighbors(G, active_v)
+    nb = set(nx.neighbors(G, active_v))
     if G.nodes - F == nb:
         return len(F) + get_max_indep_set(construct_H(G, F - {active_v}, nb))
 
     for v in nb:
-        # TODO bien comprendre generalized neighbor et degree
-        pass
+        gen_nb = get_generalized_neighbors(G, F, active_v, v)
+        if len(gen_nb) < 2:
+            return get_mif_len(G, F | {v}, active_v)
 
-    pass
+    for v in nb:
+        gen_nb = get_generalized_neighbors(G, F, active_v, v)
+        if len(gen_nb) > 3:
+            return max(
+                get_mif_len(G, F | {v}, active_v),
+                get_mif_len(nx.subgraph(G, G.nodes - {v}), F, active_v),
+            )
+
+    for v in nb:
+        gen_nb = get_generalized_neighbors(G, F, active_v, v)
+        if len(gen_nb) == 2:
+            return max(
+                get_mif_len(G, F | {v}, active_v),
+                get_mif_len(
+                    nx.subgraph(G, G.nodes - {v}),
+                    F | gen_nb,
+                    active_v,
+                ),
+            )
+
+    # If every v in nb has exactly 3 generalized neighbors
+    v = random.choice(list(nb))
+    gen_nb = get_generalized_neighbors(G, F, active_v, v)
+    w1, w2, w3 = None, None, None
+
+    for u in gen_nb:
+        if w1 is None and u not in nb:
+            w1 = u
+        elif w2 is None:
+            w2 = u
+        elif w3 is None:
+            w3 = u
+
+        else:
+            print("Error in assigning generalized neighbors")
+
+    return max(
+        get_mif_len(G, F | {v}, active_v),
+        get_mif_len(
+            nx.subgraph(G, G.nodes - {v}),
+            F | {w1},
+            active_v,
+        ),
+        get_mif_len(
+            nx.subgraph(G, G.nodes - {v, w1}),
+            F | {w2, w3},
+            active_v,
+        ),
+    )
 
 
 def get_decycling_number_mif_v2(G):
