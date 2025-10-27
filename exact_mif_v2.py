@@ -1,5 +1,4 @@
 import networkx as nx
-import random
 import itertools
 
 
@@ -42,8 +41,8 @@ def get_anti_edges(G, v):
 
 
 def fold_graph(G, v, anti_edges):
-    nb_v = nx.neighbors(G, v)
-    folded_G = nx.subgraph(G, G.nodes - nb_v - {v}).copy()
+    nb_v = set(nx.neighbors(G, v))
+    folded_G = G.copy()
     added_nodes = set()
 
     for i, j in anti_edges:
@@ -54,10 +53,10 @@ def fold_graph(G, v, anti_edges):
             if u != v and u not in nb_v:
                 folded_G.add_edge(n, u)
 
-    for u, v in itertools.combinations(added_nodes, 2):
-        folded_G.add_edge(u, v)
+    for a, b in itertools.combinations(added_nodes, 2):
+        folded_G.add_edge(a, b)
 
-    return folded_G
+    return nx.subgraph(folded_G, set(folded_G.nodes) - nb_v - {v})
 
 
 def get_2_hop_neighbors(G, v):
@@ -102,9 +101,9 @@ def get_max_indep_set(G):
         nb_u = set(nx.neighbors(G, u))
         nb_v = set(nx.neighbors(G, v))
         if (nb_v | {v}).issubset(nb_u | {u}):
-            return get_max_indep_set(nx.subgraph(G, G.nodes - {u}))
+            return get_max_indep_set(nx.subgraph(G, set(G.nodes) - {u}))
 
-    node_degrees = nx.degree(G)
+    node_degrees = list(nx.degree(G))
     max_deg_4 = [(n, d) for n, d in node_degrees if d <= 4]
     sorted_deg = sorted(max_deg_4, key=lambda x: x[1])
 
@@ -148,7 +147,7 @@ def get_mif_len(G, F, active_v):
 
     sg_F = nx.subgraph(G, F)
     new_G = G.copy()
-    new_F = F.copy()
+    new_F = set(F)
     # Verify is F is acyclic?
     if (
         len(sg_F.edges) != 0
@@ -165,7 +164,7 @@ def get_mif_len(G, F, active_v):
                 if connections > 1:
                     vertices_to_remove.add(v)
 
-            v_T = random.choice(list(T))
+            v_T = next(iter(T))
 
             for n in T - {v_T}:
                 new_G = nx.contracted_nodes(new_G, v_T, n, self_loops=False)
@@ -190,7 +189,7 @@ def main_procedure(G, F, active_v):
         return len(G.nodes)
 
     if len(F) == 0:
-        max_degree = max(dict(nx.degree(G)).values())
+        max_degree = int(max(dict(nx.degree(G)).values()))
 
         if max_degree < 2:
             return len(G.nodes)
@@ -202,10 +201,10 @@ def main_procedure(G, F, active_v):
             )
 
     if active_v is None:
-        active_v = random.choice(list(F))
+        active_v = next(iter(F))
 
     nb = set(nx.neighbors(G, active_v))
-    if G.nodes - F == nb:
+    if set(G.nodes) - F == nb:
         return len(F) + get_max_indep_set(construct_H(G, F - {active_v}, nb))
 
     for v in nb:
@@ -227,41 +226,52 @@ def main_procedure(G, F, active_v):
             return max(
                 get_mif_len(G, F | {v}, active_v),
                 get_mif_len(
-                    nx.subgraph(G, G.nodes - {v}),
+                    nx.subgraph(G, set(G.nodes) - {v}),
                     F | gen_nb,
                     active_v,
                 ),
             )
 
-    # If every v in nb has exactly 3 generalized neighbors
-    v = random.choice(list(nb))
-    gen_nb = get_generalized_neighbors(G, F, active_v, v)
-    w1, w2, w3 = None, None, None
+    # If every v in nb has exactly 3 generalized neighbors, find a v that has at least one generalized neighbor outside nb
+    v = None
+    good_gen_nb = None
+    for n in nb:
+        gen_nb = get_generalized_neighbors(G, F, active_v, n)
+        if any(u not in nb for u in gen_nb):
+            v = n
+            good_gen_nb = gen_nb
+            break
 
-    for u in gen_nb:
-        if w1 is None and u not in nb:
-            w1 = u
-        elif w2 is None:
-            w2 = u
-        elif w3 is None:
-            w3 = u
+    if v is not None and good_gen_nb is not None:
+        w1, w2, w3 = None, None, None
+        for u in good_gen_nb:
+            if w1 is None and u not in nb:
+                w1 = u
+            elif w2 is None:
+                w2 = u
+            elif w3 is None:
+                w3 = u
 
-        else:
-            print("Error in assigning generalized neighbors")
+            else:
+                print("Problem")
 
-    return max(
-        get_mif_len(G, F | {v}, active_v),
-        get_mif_len(
-            nx.subgraph(G, G.nodes - {v}),
-            F | {w1},
-            active_v,
-        ),
-        get_mif_len(
-            nx.subgraph(G, G.nodes - {v, w1}),
-            F | {w2, w3},
-            active_v,
-        ),
-    )
+        return max(
+            get_mif_len(G, F | {v}, active_v),
+            get_mif_len(
+                nx.subgraph(G, set(G.nodes) - {v}),
+                F | {w1},
+                active_v,
+            ),
+            get_mif_len(
+                nx.subgraph(G, set(G.nodes) - {v, w1}),
+                F | {w2, w3},
+                active_v,
+            ),
+        )
+
+    else:
+        print("Problem")
+        return Exception("No suitable v found")
 
 
 def get_decycling_number_mif_v2(G):
