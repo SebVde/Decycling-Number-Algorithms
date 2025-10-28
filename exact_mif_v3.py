@@ -21,14 +21,14 @@ def get_non_trivial_components(G):
 
 
 def find_short_pair(G, F, active_v):
-    for u, v in itertools.combinations(set(G.nodes()) - F, 2):
+    for u, v in itertools.combinations(set(G.nodes) - F, 2):
         nb_u = set(nx.neighbors(G, u))
         nb_v = set(nx.neighbors(G, v))
         # If parallel edges between u and v (so u,v is a short-cycle) or they have a common neighbor in F (also short-cycle)
         if (G.number_of_edges(u, v) > 1) or (
             G.number_of_edges(u, v) == 1 and any(w in F for w in nb_u & nb_v)
         ):
-            if (active_v is None) or (active_v not in nb_u & nb_v):
+            if not ((active_v is not None) and (active_v in nb_u or active_v in nb_v)):
                 return u, v
 
     return None, None
@@ -60,8 +60,9 @@ def is_trigger_vertex(G, F, active_v, v):
 
 def find_optimal_v(G, F, active_v):
     nb_active = set(nx.neighbors(G, active_v))
+    G_not_F = set(G.nodes) - F
     possible = set()
-    for v in nb_active - F:
+    for v in G_not_F:
         gen_nb = get_generalized_neighbors(G, F, active_v, v)
         if len(gen_nb) < 3:
             continue
@@ -80,7 +81,7 @@ def find_optimal_v(G, F, active_v):
 
     else:
         return max(
-            nb_active - F,
+            G_not_F,
             key=lambda x: (
                 len(set(nx.neighbors(G, x)) & (F - {active_v})),
                 len(get_generalized_neighbors(G, F, active_v, x) & nb_active),
@@ -106,7 +107,7 @@ def main_procedure(G, F, active_v):
         F1 = F & (H | {v})
         G1 = nx.subgraph(G, H | {v})
         F2 = F - H
-        G2 = nx.subgraph(G, set(G.nodes) - H)
+        G2 = nx.subgraph(G, set(G.nodes) - H - {v})
         F1_star = F1 | {v}
 
         if v in F:
@@ -155,7 +156,7 @@ def main_procedure(G, F, active_v):
     for v in nb_active:
         gen_nb = get_generalized_neighbors(G, F, active_v, v)
         if len(gen_nb) == 2:
-            if not nx.subgraph(G, F | gen_nb).is_forest():
+            if not nx.is_forest(nx.subgraph(G, F | gen_nb)):
                 return get_mif_len(G, F | {v}, active_v)
             else:
                 return max(
@@ -171,27 +172,37 @@ def main_procedure(G, F, active_v):
     gen_nb = get_generalized_neighbors(G, F, active_v, optimal_v)
     if len(gen_nb) == 3 and not is_trigger_vertex(G, F, active_v, optimal_v):
         v1, v2, v3 = None, None, None
-        for u in gen_nb:
-            if v3 is None and u not in nb_active:
-                v3 = u
-
-        if v3 is None:
+        # v3 (if possible) not in N(active_v) AND should maximize degree (even if it is in N(active_v) in the end)
+        not_in_nb = [x for x in gen_nb if x not in nb_active]
+        if len(not_in_nb) > 0:
+            v3 = max(not_in_nb, key=lambda x: G.degree(x))
+        else:
             v3 = max(gen_nb, key=lambda x: G.degree(x))
 
         v1, v2 = tuple(gen_nb - {v3})
-        return max(
-            get_mif_len(G, F | {optimal_v}, active_v),
-            get_mif_len(
-                nx.subgraph(G, set(G.nodes) - {optimal_v, v3}),
-                F | {v1, v2},
-                active_v,
-            ),
-            get_mif_len(
-                nx.subgraph(G, set(G.nodes) - {optimal_v}),
-                F | {v3},
-                active_v,
-            ),
-        )
+        if not nx.is_forest(nx.subgraph(G, F | {v1, v2})):
+            return max(
+                get_mif_len(G, F | {optimal_v}, active_v),
+                get_mif_len(
+                    nx.subgraph(G, set(G.nodes) - {optimal_v}),
+                    F | {v3},
+                    active_v,
+                ),
+            )
+        else:
+            return max(
+                get_mif_len(G, F | {optimal_v}, active_v),
+                get_mif_len(
+                    nx.subgraph(G, set(G.nodes) - {optimal_v, v3}),
+                    F | {v1, v2},
+                    active_v,
+                ),
+                get_mif_len(
+                    nx.subgraph(G, set(G.nodes) - {optimal_v}),
+                    F | {v3},
+                    active_v,
+                ),
+            )
 
     else:
         return max(
@@ -201,7 +212,7 @@ def main_procedure(G, F, active_v):
 
 
 def get_mif_len(G, F, active_v):
-    if len(F) > 1 and not nx.subgraph(G, F).is_forest():
+    if len(F) > 1 and not nx.is_forest(nx.subgraph(G, F)):
         print("Can't reduce cause F is not acyclic")
         return Exception
 
@@ -229,7 +240,7 @@ def get_mif_len(G, F, active_v):
         # Step 2
         v = None
         # If we find a node v not in new_F that has 2 parallel edges to a node u in new_F, we remove it from new_G
-        for n in set(new_G.nodes()) - new_F:
+        for n in set(new_G.nodes) - new_F:
             nb_in_F = set(new_G.neighbors(n)) & new_F
             for u in nb_in_F:
                 if new_G.number_of_edges(u, n) > 1:
@@ -240,6 +251,9 @@ def get_mif_len(G, F, active_v):
 
         if v is not None:
             new_G.remove_node(v)
+            new_F.discard(v)
+            if active_v == v:
+                active_v = None
             continue
 
         # Step 3
@@ -250,7 +264,10 @@ def get_mif_len(G, F, active_v):
 
         if v is not None:
             S.add(v)
-            new_G.remove(v)
+            new_G.remove_node(v)
+            new_F.discard(v)
+            if active_v == v:
+                active_v = None
             continue
 
         # Step 4
@@ -266,8 +283,15 @@ def get_mif_len(G, F, active_v):
             new_F.add(v)
             continue
 
+        else:
+            break
+
     if len(new_G.nodes) == 0:
         return len(S)
+
+    if set(new_G.nodes) == new_F:
+        return len(S) + len(new_F)
+
     else:
         return len(S) + main_procedure(new_G, new_F, active_v)
 
