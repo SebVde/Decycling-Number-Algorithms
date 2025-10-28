@@ -1,5 +1,4 @@
 import itertools
-
 import networkx as nx
 
 
@@ -35,6 +34,61 @@ def find_short_pair(G, F, active_v):
     return None, None
 
 
+def is_trigger_vertex(G, F, active_v, v):
+    nb_active = set(nx.neighbors(G, active_v))
+    for u in nb_active - F:
+        gen_nb = get_generalized_neighbors(G, F, active_v, u)
+        if len(gen_nb - nb_active) >= 3 and v in gen_nb:
+            nb_v = set(nx.neighbors(G, v))
+            nb_u = set(nx.neighbors(G, u))
+            s_set = F - nb_v
+            v_prime_set = F & nb_v
+            for s in s_set:
+                if nb_u == {active_v, v, s}:
+                    return True
+
+                for v_prime in v_prime_set:
+                    d_v_prime = G.degree(v_prime)
+                    if d_v_prime == 2 and (
+                        nb_u == {active_v, v_prime, s}
+                        or nb_u == {active_v, v, v_prime, s}
+                    ):
+                        return True
+
+    return False
+
+
+def find_optimal_v(G, F, active_v):
+    nb_active = set(nx.neighbors(G, active_v))
+    possible = set()
+    for v in nb_active - F:
+        gen_nb = get_generalized_neighbors(G, F, active_v, v)
+        if len(gen_nb) < 3:
+            continue
+
+        if is_trigger_vertex(G, F, active_v, v):
+            return v
+
+        if len(gen_nb) == 3:
+            possible.add(v)
+
+    if len(possible) > 0:
+        return max(
+            possible,
+            key=lambda x: len(get_generalized_neighbors(G, F, active_v, x) - nb_active),
+        )
+
+    else:
+        return max(
+            nb_active - F,
+            key=lambda x: (
+                len(set(nx.neighbors(G, x)) & (F - {active_v})),
+                len(get_generalized_neighbors(G, F, active_v, x) & nb_active),
+                len(get_generalized_neighbors(G, F, active_v, x)),
+            ),
+        )
+
+
 def main_procedure(G, F, active_v):
     a, b = find_short_pair(G, F, active_v)
     if a is not None and b is not None:
@@ -47,12 +101,12 @@ def main_procedure(G, F, active_v):
     if len(cut_v) > 0:
         v = next(iter(cut_v))
         components = set(nx.connected_components(nx.subgraph(G, set(G.nodes) - {v})))
-        H = min(components, key=len)
+        H = min(components, key=lambda x: len(x))
 
-        F1 = F & (set(H) | {v})
-        G1 = nx.subgraph(G, set(H) | {v})
-        F2 = F - set(H)
-        G2 = nx.subgraph(G, set(G.nodes) - set(H))
+        F1 = F & (H | {v})
+        G1 = nx.subgraph(G, H | {v})
+        F2 = F - H
+        G2 = nx.subgraph(G, set(G.nodes) - H)
         F1_star = F1 | {v}
 
         if v in F:
@@ -61,7 +115,7 @@ def main_procedure(G, F, active_v):
             ) + get_mif_len(G2, F2, active_v if active_v in F2 else None)
 
         sg_H = nx.subgraph(G, H)
-        S1 = get_mif_len(sg_H, F & set(H), active_v if active_v in F & set(H) else None)
+        S1 = get_mif_len(sg_H, F & H, active_v if active_v in F & H else None)
         S1_star = get_mif_len(G1, F1_star, active_v if active_v in F1_star else None)
 
         if S1_star > S1:
@@ -73,9 +127,9 @@ def main_procedure(G, F, active_v):
             return get_mif_len(
                 sg_H, F1, active_v if active_v in F1 else None
             ) + get_mif_len(
-                nx.subgraph(G, set(G.nodes) - (set(H) | {v})),
-                F - (set(H) | {v}),
-                active_v if active_v in F - (set(H) | {v}) else None,
+                nx.subgraph(G, set(G.nodes) - (H | {v})),
+                F - (H | {v}),
+                active_v if active_v in F - (H | {v}) else None,
             )
 
     if len(F) == 0:
@@ -87,7 +141,63 @@ def main_procedure(G, F, active_v):
     if active_v is None:
         active_v = next(iter(F))
 
-    pass
+    nb_active = set(nx.neighbors(G, active_v))
+    for v in nb_active:
+        gen_nb = get_generalized_neighbors(G, F, active_v, v)
+        d_v = G.degree(v)
+
+        if 5 <= d_v - 1 <= len(gen_nb):
+            return max(
+                get_mif_len(G, F | {v}, active_v),
+                get_mif_len(nx.subgraph(G, set(G.nodes) - {v}), F, active_v),
+            )
+
+    for v in nb_active:
+        gen_nb = get_generalized_neighbors(G, F, active_v, v)
+        if len(gen_nb) == 2:
+            if not nx.subgraph(G, F | gen_nb).is_forest():
+                return get_mif_len(G, F | {v}, active_v)
+            else:
+                return max(
+                    get_mif_len(G, F | {v}, active_v),
+                    get_mif_len(
+                        nx.subgraph(G, set(G.nodes) - {v}),
+                        F | gen_nb,
+                        active_v,
+                    ),
+                )
+
+    optimal_v = find_optimal_v(G, F, active_v)
+    gen_nb = get_generalized_neighbors(G, F, active_v, optimal_v)
+    if len(gen_nb) == 3 and not is_trigger_vertex(G, F, active_v, optimal_v):
+        v1, v2, v3 = None, None, None
+        for u in gen_nb:
+            if v3 is None and u not in nb_active:
+                v3 = u
+
+        if v3 is None:
+            v3 = max(gen_nb, key=lambda x: G.degree(x))
+
+        v1, v2 = tuple(gen_nb - {v3})
+        return max(
+            get_mif_len(G, F | {optimal_v}, active_v),
+            get_mif_len(
+                nx.subgraph(G, set(G.nodes) - {optimal_v, v3}),
+                F | {v1, v2},
+                active_v,
+            ),
+            get_mif_len(
+                nx.subgraph(G, set(G.nodes) - {optimal_v}),
+                F | {v3},
+                active_v,
+            ),
+        )
+
+    else:
+        return max(
+            get_mif_len(G, F | {optimal_v}, active_v),
+            get_mif_len(nx.subgraph(G, set(G.nodes) - {optimal_v}), F, active_v),
+        )
 
 
 def get_mif_len(G, F, active_v):
