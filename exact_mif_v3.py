@@ -107,7 +107,7 @@ def main_procedure(G, F, active_v):
         F1 = F & (H | {v})
         G1 = nx.subgraph(G, H | {v})
         F2 = F - H
-        G2 = nx.subgraph(G, set(G.nodes) - H - {v})
+        G2 = nx.subgraph(G, set(G.nodes) - H)
         F1_star = F1 | {v}
 
         if v in F:
@@ -216,8 +216,9 @@ def get_mif_len(G, F, active_v):
         print("Can't reduce cause F is not acyclic")
         return Exception
 
-    new_G = G.copy()
-    new_F = set(F)
+    new_G = nx.MultiGraph(G)
+    # Security measure but shouldn't be necessary, the code shouldn't provoque this case
+    new_F = set(F) - set([n for n in F if n not in set(G.nodes)])
     S = set()
 
     while True:
@@ -274,7 +275,10 @@ def get_mif_len(G, F, active_v):
         for n, deg in new_G.degree():
             if n not in new_F and (
                 deg == 2
-                or len(get_generalized_neighbors(new_G, new_F, active_v, n)) <= 1
+                or (
+                    active_v is not None
+                    and len(get_generalized_neighbors(new_G, new_F, active_v, n)) <= 1
+                )
             ):
                 v = n
                 break
