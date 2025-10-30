@@ -101,7 +101,7 @@ def main_procedure(G, F, active_v):
     cut_v = set(nx.articulation_points(G))
     if len(cut_v) > 0:
         v = next(iter(cut_v))
-        components = set(nx.connected_components(nx.subgraph(G, set(G.nodes) - {v})))
+        components = list(nx.connected_components(nx.subgraph(G, set(G.nodes) - {v})))
         H = min(components, key=lambda x: len(x))
 
         F1 = F & (H | {v})
@@ -111,9 +111,11 @@ def main_procedure(G, F, active_v):
         F1_star = F1 | {v}
 
         if v in F:
-            return get_mif_len(
-                G1, F1, active_v if active_v in F1 else None
-            ) + get_mif_len(G2, F2, active_v if active_v in F2 else None)
+            return (
+                get_mif_len(G1, F1, active_v if active_v in F1 else None)
+                + get_mif_len(G2, F2, active_v if active_v in F2 else None)
+                - 1
+            )  # Because v counted twice
 
         sg_H = nx.subgraph(G, H)
         S1 = get_mif_len(sg_H, F & H, active_v if active_v in F & H else None)
