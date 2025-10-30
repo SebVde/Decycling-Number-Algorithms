@@ -146,9 +146,13 @@ def get_mif_len(G, F, active_v):
         return res
 
     sg_F = nx.subgraph(G, F)
+    # Verify is F is acyclic
+    if len(sg_F.nodes) > 0 and not nx.is_forest(sg_F):
+        return 0
+
     new_G = G.copy()
     new_F = set(F)
-    # Verify is F is acyclic?
+
     if (
         len(sg_F.edges) != 0
     ):  # If F is not independent (if not every component of G[F] is an isolated vertex)
