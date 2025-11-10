@@ -62,7 +62,7 @@ def benchmark_graph_methods(
     output_filename="benchmark_results.txt",
 ):
 
-    # file_pattern = re.compile(r"v_(\d+)_D_(\d+)\.mat")
+    file_pattern = re.compile(r"v_(\d+)_D_(\d+)\.mat")
 
     if not os.path.isdir(directory_path):
         print(f"Error : Folder '{directory_path}' does not exist.")
@@ -72,7 +72,7 @@ def benchmark_graph_methods(
     #     f for f in os.listdir(directory_path) if file_pattern.match(f)
     # )
 
-    files_to_process = [f for f in os.listdir(directory_path) if f.endswith(".mat")]
+    files_to_process = [f for f in os.listdir(directory_path) if file_pattern.match(f)]
 
     if not files_to_process:
         print(f"No file to process has been found in folder '{directory_path}'.")
@@ -236,8 +236,8 @@ def benchmark_graph_methods(
 if __name__ == "__main__":
     multiprocessing.freeze_support()
     GRAPH_FOLDER = "Benchmark graphs"
-    TIMEOUT_MAX = 30  # 1 seconde
-    RESULT_FILE = "benchmark_results.txt"
+    TIMEOUT_MAX = 600
+    RESULT_FILE = "benchmark_results_10minTimeout2.txt"
 
     METHODS = [
         get_decycling_number_mif,
