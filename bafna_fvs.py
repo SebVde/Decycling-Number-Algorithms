@@ -2,48 +2,66 @@ import networkx as nx
 
 
 def cleanup(G):
-    new_G = G.copy()
     while True:
-        to_remove = [node for node in new_G.nodes if new_G.degree(node) <= 1]
+        to_remove = [node for node in G.nodes if G.degree(node) <= 1]
         if len(to_remove) == 0:
             break
-        new_G.remove_nodes_from(to_remove)
+        G.remove_nodes_from(to_remove)
 
-    return new_G
+    return G
 
 
 def find_semidisjoint_cycle(G):
-    for cycle in nx.cycle_basis(G):
-        cnt = 0
-        for node in cycle:
-            if G.degree(node) != 2:
-                cnt += 1
-            if cnt > 1:
-                break
-        if cnt <= 1:
-            return cycle
+    degree_2 = {n for n, d in G.degree() if d == 2}
+    if len(degree_2) == 0:
+        return None
+
+    sg_d2 = nx.subgraph(G, degree_2)
+    visited = set()
+
+    for node in degree_2:
+        if node in visited:
+            continue
+
+        component = list(nx.node_connected_component(sg_d2, node))
+        visited.update(component)
+        sg_comp = nx.subgraph(G, component)
+
+        # If in the component the number of edges equals the number of nodes, then it's a cycle
+        if 0 < len(component) == sg_comp.number_of_edges():
+            return component
+
+        # Else, we need to check if it's a path with endpoints connected to a common junction node
+        endpoints = [n for n in component if sg_comp.degree(n) <= 1]
+        if len(endpoints) == 2:
+            ep1, ep2 = endpoints
+            nb_1 = {n for n in G.neighbors(ep1) if n not in component}
+            nb_2 = {n for n in G.neighbors(ep2) if n not in component}
+            common_junctions = {n for n in nb_1 & nb_2 if G.degree(n) > 2}
+
+            if len(common_junctions) > 0:
+                return component + [list(common_junctions)[0]]
+
     return None
 
 
 def get_fvs(og_G):
     F = set()
-    i = 0
     stack = []
     G = og_G.copy()
 
     while len(G.nodes) > 0:
-        i += 1
         sd_cycle = find_semidisjoint_cycle(G)
         if sd_cycle is not None:
             for node in sd_cycle:
-                G.node[node]["weight"] = 0.0
+                G.nodes[node]["weight"] = 0.0
 
         else:
             gamma = min(1 / (G.degree(node) - 1) for node in G.nodes)
             for node in G.nodes:
                 G.nodes[node]["weight"] -= gamma * (G.degree(node) - 1)
 
-        to_remove = [node for node in G.nodes if G.nodes[node]["weight"] == 0.0]
+        to_remove = [node for node in G.nodes if G.nodes[node]["weight"] <= 0.0]
         F.update(to_remove)
         G.remove_nodes_from(to_remove)
         stack.extend(to_remove)
@@ -52,14 +70,15 @@ def get_fvs(og_G):
     while len(stack) > 0:
         node = stack.pop()
         sg = nx.subgraph(og_G, og_G.nodes - (F - {node}))
-        if nx.is_forest(sg):
+        # With this check, it should ensure that each call for nx.is_forest is in O(|V|) time since |E| < |V|
+        if G.number_of_edges() <= G.number_of_nodes() - 1 and nx.is_forest(sg):
             F.remove(node)
 
     return F
 
 
 def get_decycling_number_2_approx(G):
-    clean_G = cleanup(G)
+    clean_G = cleanup(G.copy())
     for node in clean_G.nodes:
         clean_G.nodes[node]["weight"] = 1.0
 
