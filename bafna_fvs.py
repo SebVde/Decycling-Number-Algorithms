@@ -57,6 +57,7 @@ def get_fvs(og_G):
                 G.nodes[node]["weight"] = 0.0
 
         else:
+            # TODO implement priority queue like mentioned in the paper to optimize this step
             gamma = min(1 / (G.degree(node) - 1) for node in G.nodes)
             for node in G.nodes:
                 G.nodes[node]["weight"] -= gamma * (G.degree(node) - 1)
