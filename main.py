@@ -1,3 +1,4 @@
+import datetime
 import multiprocessing
 import networkx as nx
 from pyvis.network import Network
@@ -5,6 +6,7 @@ from exact_mif import get_decycling_number_mif
 from naive import get_decycling_number
 from exact_mif_v2 import get_decycling_number_mif_v2
 from exact_mif_v3 import get_decycling_number_mif_v3
+from bafna_fvs import get_decycling_number_2_approx
 import re
 import io
 import numpy as np
@@ -61,7 +63,7 @@ def benchmark_graph_methods(
     timeout_seconds,
     output_filename="benchmark_results.txt",
 ):
-
+    benchmark_start_time = time.perf_counter()
     file_pattern = re.compile(r"v_(\d+)_D_(\d+)\.mat")
 
     if not os.path.isdir(directory_path):
@@ -72,7 +74,7 @@ def benchmark_graph_methods(
     #     f for f in os.listdir(directory_path) if file_pattern.match(f)
     # )
 
-    files_to_process = [f for f in os.listdir(directory_path) if file_pattern.match(f)]
+    files_to_process = [f for f in os.listdir(directory_path)]
 
     if not files_to_process:
         print(f"No file to process has been found in folder '{directory_path}'.")
@@ -127,30 +129,48 @@ def benchmark_graph_methods(
 
                     for method in methods_list:
                         method_name = method.__name__
-                        result_queue = multiprocessing.Queue()
 
-                        p = multiprocessing.Process(
-                            target=run_method_in_process,
-                            args=(method, graph, result_queue),
-                        )
-                        p.start()
-                        p.join(timeout=timeout_seconds)
+                        run_times = []
+                        timeout_occurred = False
+                        error_occurred = False
 
-                        if p.is_alive():
-                            p.terminate()
-                            p.join()
-                            results[method_name]["timeouts"] += 1
-                        elif p.exitcode != 0:
-                            results[method_name]["errors"] += 1
-                        else:
-                            try:
-                                result = result_queue.get_nowait()
-                                if isinstance(result, Exception):
-                                    results[method_name]["errors"] += 1
-                                else:
-                                    results[method_name]["times"].append(result)
-                            except QueueEmpty:
+                        for _ in range(3):
+                            result_queue = multiprocessing.Queue()
+
+                            p = multiprocessing.Process(
+                                target=run_method_in_process,
+                                args=(method, graph, result_queue),
+                            )
+                            p.start()
+                            p.join(timeout=timeout_seconds)
+
+                            if p.is_alive():
+                                p.terminate()
+                                p.join()
+                                timeout_occurred = True
+                                break
+                            elif p.exitcode != 0:
+                                error_occurred = True
+                                break
+                            else:
+                                try:
+                                    result = result_queue.get_nowait()
+                                    if isinstance(result, Exception):
+                                        error_occurred = True
+                                        break
+                                    else:
+                                        run_times.append(result)
+                                except QueueEmpty:
+                                    error_occurred = True
+                                    break
+
+                            if timeout_occurred:
+                                results[method_name]["timeouts"] += 1
+                            elif error_occurred:
                                 results[method_name]["errors"] += 1
+                            elif run_times:
+                                median_time = np.median(run_times)
+                                results[method_name]["times"].append(median_time)
 
                 print(f"\n  Finished tests for {filename}.\n")
                 f_out.write("\n  Finished tests. Results incoming...\n\n")
@@ -220,11 +240,16 @@ def benchmark_graph_methods(
 
                 f_out.write("\n")
 
+            benchmark_end_time = time.perf_counter()
+            total_seconds = benchmark_end_time - benchmark_start_time
+            formatted_time = str(datetime.timedelta(seconds=total_seconds))
             print(f"\n{file_separator}")
             print(f"Benchmark over. Results written in '{output_filename}'.")
+            print(f"Total execution time: {formatted_time}")
             print(f"{file_separator}")
             f_out.write(f"\n{file_separator}\n")
-            f_out.write("Benchmar over.\n")
+            f_out.write("Benchmark over.\n")
+            f_out.write(f"Total execution time: {formatted_time}\n")
 
     except IOError as e:
         print(f"Error: Impossible to write in '{output_filename}': {e}")
@@ -235,9 +260,9 @@ def benchmark_graph_methods(
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()
-    GRAPH_FOLDER = "Benchmark graphs"
+    # GRAPH_FOLDER = "Benchmark graphs/diameter"
     TIMEOUT_MAX = 600
-    RESULT_FILE = "benchmark_results_10minTimeout2.txt"
+    # RESULT_FILE = "benchmark_results_diameter_3x.txt"
 
     METHODS = [
         get_decycling_number_mif,
@@ -245,13 +270,25 @@ if __name__ == "__main__":
         get_decycling_number_mif_v3,
     ]
 
-    print(f"Starting benchmark. Results will be found in '{RESULT_FILE}'")
+    # benchmark_graph_methods(
+    #     directory_path="Benchmark graphs/diameter",
+    #     methods_list=METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="benchmark_results_diameter_3x.txt",
+    # )
+    #
+    # benchmark_graph_methods(
+    #     directory_path="Benchmark graphs/chromatic number",
+    #     methods_list=METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="benchmark_results_chrom_number_3x.txt",
+    # )
 
     benchmark_graph_methods(
-        directory_path=GRAPH_FOLDER,
+        directory_path="Benchmark graphs/density",
         methods_list=METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename=RESULT_FILE,
+        output_filename="benchmark_results_density_3x.txt",
     )
 
 # graphs = parse_adj_matrices("Benchmark graphs/equal_to_1.mat")
@@ -262,8 +299,9 @@ if __name__ == "__main__":
 #     print("Decycling number (MIF v3):", get_decycling_number_mif_v3(graph))
 #     print("-----")
 
-# nt = nx.erdos_renyi_graph(30, 0.9)
+# nt = nx.erdos_renyi_graph(120, 0.9)
 # Densité faible -> plus lent
+# print(get_decycling_number_2_approx(nt))
 
 # nt = nx.Graph()
 # nt.add_nodes_from(["V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"])
