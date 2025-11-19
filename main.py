@@ -7,6 +7,7 @@ from naive import get_decycling_number
 from exact_mif_v2 import get_decycling_number_mif_v2
 from exact_mif_v3 import get_decycling_number_mif_v3
 from bafna_fvs import get_decycling_number_2_approx
+from constr_heur import get_decycling_number_constr_heur
 import re
 import io
 import numpy as np
@@ -164,13 +165,13 @@ def benchmark_graph_methods(
                                     error_occurred = True
                                     break
 
-                            if timeout_occurred:
-                                results[method_name]["timeouts"] += 1
-                            elif error_occurred:
-                                results[method_name]["errors"] += 1
-                            elif run_times:
-                                median_time = np.median(run_times)
-                                results[method_name]["times"].append(median_time)
+                        if timeout_occurred:
+                            results[method_name]["timeouts"] += 1
+                        elif error_occurred:
+                            results[method_name]["errors"] += 1
+                        elif run_times:
+                            median_time = np.median(run_times)
+                            results[method_name]["times"].append(median_time)
 
                 print(f"\n  Finished tests for {filename}.\n")
                 f_out.write("\n  Finished tests. Results incoming...\n\n")
@@ -299,9 +300,9 @@ if __name__ == "__main__":
 #     print("Decycling number (MIF v3):", get_decycling_number_mif_v3(graph))
 #     print("-----")
 
-# nt = nx.erdos_renyi_graph(120, 0.9)
+# nt = nx.erdos_renyi_graph(900, 0.9)
 # Densité faible -> plus lent
-# print(get_decycling_number_2_approx(nt))
+# print(get_decycling_number_constr_heur(nt))
 
 # nt = nx.Graph()
 # nt.add_nodes_from(["V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"])
