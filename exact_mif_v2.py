@@ -150,12 +150,12 @@ def get_mif_len(G, F, active_v):
     if len(sg_F.nodes) > 0 and not nx.is_forest(sg_F):
         return 0
 
-    new_G = G.copy()
-    new_F = set(F)
-
     if (
         len(sg_F.edges) != 0
     ):  # If F is not independent (if not every component of G[F] is an isolated vertex)
+
+        new_G = G.copy()
+        new_F = set(F)
         for T in get_non_trivial_components(sg_F):
             # Get all neighbors of T in G and need to remove those with more than 1 connection to T
             nb_T = set()
