@@ -254,9 +254,6 @@ def get_mif_len(G, F, active_v):
 
         if v is not None:
             new_G.remove_node(v)
-            new_F.discard(v)
-            if active_v == v:
-                active_v = None
             continue
 
         # Step 3
