@@ -4,7 +4,8 @@ import networkx as nx
 
 def get_generalized_neighbors(G, F, active_v, v):
     gen_nb = set(nx.neighbors(G, v)) - F
-    ens = set(nx.neighbors(G, v)) & (F - {active_v})
+    excl = {active_v} if active_v is not None else set()
+    ens = set(nx.neighbors(G, v)) & (F - excl)
     for s in ens:
         gen_nb.update(set(nx.neighbors(G, s)) - F)
 
@@ -274,10 +275,7 @@ def get_mif_len(G, F, active_v):
         for n, deg in new_G.degree():
             if n not in new_F and (
                 deg == 2
-                or (
-                    active_v is not None
-                    and len(get_generalized_neighbors(new_G, new_F, active_v, n)) <= 1
-                )
+                or len(get_generalized_neighbors(new_G, new_F, active_v, n)) <= 1
             ):
                 v = n
                 break
@@ -304,3 +302,24 @@ def get_decycling_number_mif_v3(G):
         return 0
 
     return len(G.nodes) - get_mif_len(G, set(), None)
+
+
+if __name__ == "__main__":
+    nt = nx.Graph()
+    nt.add_nodes_from(["V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"])
+    nt.add_edges_from(
+        [
+            ("V1", "V2"),
+            ("V1", "V3"),
+            ("V2", "V4"),
+            ("V4", "V5"),
+            ("V3", "V5"),
+            ("V4", "V6"),
+            ("V6", "V7"),
+            ("V5", "V7"),
+            ("V7", "V8"),
+            ("V6", "V8"),
+        ]
+    )
+
+    print(get_decycling_number_mif_v3(nt))
