@@ -259,7 +259,7 @@ def get_mif_len(G, F, active_v):
 
         # Step 3
         for n, deg in new_G.degree():
-            if deg == 1:
+            if deg <= 1:
                 v = n
                 break
 
@@ -289,9 +289,6 @@ def get_mif_len(G, F, active_v):
 
     if len(new_G.nodes) == 0:
         return len(S)
-
-    if set(new_G.nodes) == new_F:
-        return len(S) + len(new_F)
 
     else:
         return len(S) + main_procedure(new_G, new_F, active_v)
