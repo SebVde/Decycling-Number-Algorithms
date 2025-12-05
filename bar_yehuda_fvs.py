@@ -1,4 +1,5 @@
 import networkx as nx
+from collections import deque
 
 
 def dfs_remove_below_2(H, v):
@@ -32,11 +33,47 @@ def find_maximal_2_3_subgraph(G):
     return H
 
 
+def cycle_exists_with_node(G, n):
+    queue = deque()
+    queue.append((n, None))
+    visited = set()
+    visited.add(n)
+
+    while queue:
+        current, parent = queue.popleft()
+        for nb in G.neighbors(current):
+            if nb == parent:
+                continue
+
+            if nb == n:
+                return True
+
+            if nb not in visited:
+                visited.add(nb)
+                queue.append((nb, current))
+
+    return False
+
+
+def get_critical_linkpoints(G, H):
+    linkpoints = {n for n in H.nodes if H.degree(n) == 2}
+    critical_linkpoints = set()
+
+    for n in linkpoints:
+        sg = nx.subgraph(G, set(G.nodes) - (set(H.nodes) - {n}))
+        if cycle_exists_with_node(sg, n):
+            critical_linkpoints.add(n)
+
+    return critical_linkpoints
+
+
 def subG_2_3(G):
     if nx.is_forest(G):
         return set()
 
     H = find_maximal_2_3_subgraph(G)
+    X = get_critical_linkpoints(G, H)
+    Y = {n for n in H.nodes if H.degree(n) > 2}
     pass
 
 
