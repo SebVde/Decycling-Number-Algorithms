@@ -299,24 +299,3 @@ def get_decycling_number_mif_v3(G):
         return 0
 
     return len(G.nodes) - get_mif_len(G, set(), None)
-
-
-if __name__ == "__main__":
-    nt = nx.Graph()
-    nt.add_nodes_from(["V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"])
-    nt.add_edges_from(
-        [
-            ("V1", "V2"),
-            ("V1", "V3"),
-            ("V2", "V4"),
-            ("V4", "V5"),
-            ("V3", "V5"),
-            ("V4", "V6"),
-            ("V6", "V7"),
-            ("V5", "V7"),
-            ("V7", "V8"),
-            ("V6", "V8"),
-        ]
-    )
-
-    print(get_decycling_number_mif_v3(nt))
