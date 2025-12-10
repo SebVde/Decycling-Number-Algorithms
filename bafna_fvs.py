@@ -49,20 +49,20 @@ def get_fvs(og_G):
     F = set()
     stack = []
     G = og_G.copy()
+    weights = {n: 1.0 for n in G.nodes()}
 
     while len(G.nodes) > 0:
         sd_cycle = find_semidisjoint_cycle(G)
         if sd_cycle is not None:
             for node in sd_cycle:
-                G.nodes[node]["weight"] = 0.0
+                weights[node] -= min(weights[node] for node in sd_cycle)
 
         else:
-            # TODO implement priority queue like mentioned in the paper to optimize this step
-            gamma = min(1 / (G.degree(node) - 1) for node in G.nodes)
+            gamma = min(weights[node] / (G.degree(node) - 1) for node in G.nodes)
             for node in G.nodes:
-                G.nodes[node]["weight"] -= gamma * (G.degree(node) - 1)
+                weights[node] -= gamma * (G.degree(node) - 1)
 
-        to_remove = [node for node in G.nodes if G.nodes[node]["weight"] <= 0.0]
+        to_remove = [node for node in G.nodes if weights[node] <= 1e-9]
         F.update(to_remove)
         G.remove_nodes_from(to_remove)
         stack.extend(to_remove)
@@ -70,7 +70,7 @@ def get_fvs(og_G):
 
     while len(stack) > 0:
         node = stack.pop()
-        sg = nx.subgraph(og_G, og_G.nodes - (F - {node}))
+        sg = nx.subgraph_view(og_G, filter_node=lambda n: n not in F or n == node)
         # With this check, it should ensure that each call for nx.is_forest is in O(|V|) time since |E| < |V|
         if sg.number_of_edges() <= sg.number_of_nodes() - 1 and nx.is_forest(sg):
             F.remove(node)
@@ -80,8 +80,5 @@ def get_fvs(og_G):
 
 def get_decycling_number_2_approx(G):
     clean_G = cleanup(G.copy())
-    for node in clean_G.nodes:
-        clean_G.nodes[node]["weight"] = 1.0
-
     fvs = get_fvs(clean_G)
     return len(fvs)
