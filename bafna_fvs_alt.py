@@ -196,7 +196,7 @@ def get_fvs(og_G):
     return F
 
 
-def get_decycling_number_2_approx(G):
+def get_decycling_number_2_approx_alt(G):
     clean_G = cleanup(G.copy())
     fvs = get_fvs(clean_G)
     return len(fvs)
