@@ -72,7 +72,7 @@ def get_fvs(og_G):
         node = stack.pop()
         sg = nx.subgraph(og_G, og_G.nodes - (F - {node}))
         # With this check, it should ensure that each call for nx.is_forest is in O(|V|) time since |E| < |V|
-        if G.number_of_edges() <= G.number_of_nodes() - 1 and nx.is_forest(sg):
+        if sg.number_of_edges() <= sg.number_of_nodes() - 1 and nx.is_forest(sg):
             F.remove(node)
 
     return F
