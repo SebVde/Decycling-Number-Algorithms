@@ -198,7 +198,7 @@ def main_procedure(G, F, active_v):
         if max_degree < 2:
             return len(G.nodes)
         else:
-            t = next(n for n, d in G.degree() if d >= 2)
+            t = list(sorted(n for n, d in G.degree() if d >= 2))[0]
             new_G = nx.subgraph(G, G.nodes - {t})
             return max(
                 get_mif_len(G, F | {t}, active_v), get_mif_len(new_G, F, active_v)
