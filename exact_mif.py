@@ -22,7 +22,7 @@ def get_cnf(G, T):
     components = list(nx.connected_components(nx.subgraph(G, T)))
 
     if len(components) > 0:
-        for v in set(G.nodes) - T:
+        for v in sorted(set(G.nodes) - T):
             # For each connected component from T, check if v has 2 or more neighbors in the component
             for comp in components:
                 neighbors_in_comp = set(nx.neighbors(G, v)) & comp  # & = intersection
@@ -126,9 +126,9 @@ def find_mif_len(G, T, K):
         v = None
         bnd = get_bnd(G, T)
         if len(bnd) > 0:
-            v = next(iter(bnd))
+            v = list(sorted(bnd))[0]
         else:
-            v = next(iter(set(G.nodes) - (T | K)))
+            v = list(sorted(set(G.nodes) - (T | K)))[0]
 
         new_G, new_T, new_K = T_update(G, T, K, v)
         new_S = find_mif_len(new_G, new_T, new_K)
@@ -136,7 +136,7 @@ def find_mif_len(G, T, K):
         W = get_K_connected(G, K, v) & set(G.nodes) - (T | K | {v})
 
         match len(W):
-            case 0, 1:
+            case 0 | 1:
                 return new_S
             case 2:
                 sg = nx.subgraph(G, set(G.nodes) - {v})
