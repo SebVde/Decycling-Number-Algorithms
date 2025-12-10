@@ -22,7 +22,7 @@ jobs:
         run: pip install pipreqs
 
       - name: Update requirements.txt
-        run: pipreqs . --force --ignore .venv
+        run: pipreqs . --force --ignore .venv --mode gt
 
       - name: Commit and push if changed
         run: |
