@@ -18,11 +18,54 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Backup current requirements
+        run: |
+          if [ -f requirements.txt ]; then
+            mv requirements.txt requirements.old
+          else
+            touch requirements.old
+          fi
+
       - name: Install pipreqs
         run: pip install pipreqs
 
-      - name: Update requirements.txt
+      - name: Generate new requirements
         run: pipreqs . --force --ignore .venv --mode gt
+
+      - name: Restore old versions if they exist
+        shell: python
+        run: |
+          import os
+          def parse_reqs(filename):
+              data = {}
+              if not os.path.exists(filename):
+                  return data
+              with open(filename, 'r') as f:
+                  for line in f:
+                      line = line.strip()
+                      if not line or line.startswith('#'): continue
+                      parts = line.split('>=') if '>=' in line else line.split('==')
+                      if len(parts) > 1:
+                          data[parts[0].lower()] = line
+              return data
+
+          old_versions = parse_reqs('requirements.old')
+          new_lines = []
+          if os.path.exists('requirements.txt'):
+              with open('requirements.txt', 'r') as f:
+                  for line in f:
+                      line = line.strip()
+                      if not line: continue
+                      pkg_name = line.split('>=')[0].split('==')[0].strip().lower()
+                      if pkg_name in old_versions:
+                          new_lines.append(old_versions[pkg_name])
+                      else:
+                          new_lines.append(line)
+
+          with open('requirements.txt', 'w') as f:
+              f.write('\n'.join(new_lines) + '\n')
+          if os.path.exists('requirements.old'):
+              os.remove('requirements.old')
 
       - name: Commit and push if changed
         run: |
