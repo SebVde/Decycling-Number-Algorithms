@@ -22,7 +22,7 @@ def get_non_trivial_components(G):
 
 
 def find_short_pair(G, F, active_v):
-    for u, v in itertools.combinations(set(G.nodes) - F, 2):
+    for u, v in itertools.combinations(sorted(set(G.nodes) - F), 2):
         nb_u = set(nx.neighbors(G, u))
         nb_v = set(nx.neighbors(G, v))
         # If parallel edges between u and v (so u,v is a short-cycle) or they have a common neighbor in F (also short-cycle)
@@ -37,18 +37,18 @@ def find_short_pair(G, F, active_v):
 
 def is_trigger_vertex(G, F, active_v, v):
     nb_active = set(nx.neighbors(G, active_v))
-    for u in nb_active - F:
+    for u in sorted(nb_active - F):
         gen_nb = get_generalized_neighbors(G, F, active_v, u)
         if len(gen_nb - nb_active) >= 3 and v in gen_nb:
             nb_v = set(nx.neighbors(G, v))
             nb_u = set(nx.neighbors(G, u))
             s_set = F - nb_v
             v_prime_set = F & nb_v
-            for s in s_set:
+            for s in sorted(s_set):
                 if nb_u == {active_v, v, s}:
                     return True
 
-                for v_prime in v_prime_set:
+                for v_prime in sorted(v_prime_set):
                     d_v_prime = G.degree(v_prime)
                     if d_v_prime == 2 and (
                         nb_u == {active_v, v_prime, s}
@@ -63,7 +63,7 @@ def find_optimal_v(G, F, active_v):
     nb_active = set(nx.neighbors(G, active_v))
     G_not_F = set(G.nodes) - F
     possible = set()
-    for v in G_not_F:
+    for v in sorted(G_not_F):
         gen_nb = get_generalized_neighbors(G, F, active_v, v)
         if len(gen_nb) < 3:
             continue
@@ -101,7 +101,7 @@ def main_procedure(G, F, active_v):
 
     cut_v = set(nx.articulation_points(G))
     if len(cut_v) > 0:
-        v = next(iter(cut_v))
+        v = list(sorted(cut_v))[0]
         components = list(nx.connected_components(nx.subgraph(G, set(G.nodes) - {v})))
         H = min(components, key=lambda x: len(x))
 
@@ -143,10 +143,10 @@ def main_procedure(G, F, active_v):
         return max(get_mif_len(G, F | {v}, v), get_mif_len(new_G, F, active_v))
 
     if active_v is None:
-        active_v = next(iter(F))
+        active_v = list(sorted(F))[0]
 
     nb_active = set(nx.neighbors(G, active_v))
-    for v in nb_active:
+    for v in sorted(nb_active):
         gen_nb = get_generalized_neighbors(G, F, active_v, v)
         d_v = G.degree(v)
 
@@ -156,7 +156,7 @@ def main_procedure(G, F, active_v):
                 get_mif_len(nx.subgraph(G, set(G.nodes) - {v}), F, active_v),
             )
 
-    for v in nb_active:
+    for v in sorted(nb_active):
         gen_nb = get_generalized_neighbors(G, F, active_v, v)
         if len(gen_nb) == 2:
             if not nx.is_forest(nx.subgraph(G, F | gen_nb)):
@@ -230,7 +230,7 @@ def get_mif_len(G, F, active_v):
         non_trivial_components = get_non_trivial_components(sg_F)
         if len(non_trivial_components) > 0:
             T = non_trivial_components[0]
-            v = next(iter(T))
+            v = list(sorted(T))[0]
             if (active_v is not None) and (active_v in T):
                 v = active_v
 
@@ -244,9 +244,9 @@ def get_mif_len(G, F, active_v):
         # Step 2
         v = None
         # If we find a node v not in new_F that has 2 parallel edges to a node u in new_F, we remove it from new_G
-        for n in set(new_G.nodes) - new_F:
+        for n in sorted(set(new_G.nodes) - new_F):
             nb_in_F = set(new_G.neighbors(n)) & new_F
-            for u in nb_in_F:
+            for u in sorted(nb_in_F):
                 if new_G.number_of_edges(u, n) > 1:
                     v = n
                     break
