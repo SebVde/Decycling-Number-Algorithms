@@ -1,5 +1,7 @@
 import datetime
 import multiprocessing
+import sys
+
 import networkx as nx
 from pyvis.network import Network
 from exact_mif import get_decycling_number_mif
@@ -48,12 +50,43 @@ def parse_adj_matrices(file):
     return graphs
 
 
+def log_error_matrix(filename, graph_idx, method_name, error_message, graph):
+    """
+    Enregistre la matrice d'adjacence et l'erreur dans errors.txt
+    """
+    try:
+        with open("errors.txt", "a", encoding="utf-8") as f_err:
+            f_err.write("=" * 40 + "\n")
+            f_err.write(f"DATE      : {time.ctime()}\n")
+            f_err.write(f"FILE      : {filename}\n")
+            f_err.write(f"GRAPH IDX : {graph_idx + 1}\n")
+            f_err.write(f"METHOD    : {method_name}\n")
+            f_err.write(f"ERROR     : {error_message}\n")
+            f_err.write("-" * 40 + "\n")
+            f_err.write("ADJACENCY MATRIX :\n")
+
+            try:
+                # Conversion du graphe NetworkX en matrice NumPy
+                adj_matrix = nx.to_numpy_array(graph)
+                for row in adj_matrix:
+                    # Formatage simple des nombres (général)
+                    row_str = " ".join(f"{x:g}" for x in row)
+                    f_err.write(f"{row_str}\n")
+            except Exception as e_mat:
+                f_err.write(f"Error converting graph to matrix: {e_mat}\n")
+                f_err.write(f"Raw graph object: {graph}\n")
+
+            f_err.write("=" * 40 + "\n\n")
+    except Exception as io_e:
+        print(f"[WARNING] Could not write to errors.txt: {io_e}")
+
+
 def run_method_in_process(method_func, graph_data, result_queue):
     try:
         start_time = time.perf_counter()
-        method_func(graph_data)
+        method_result = method_func(graph_data)
         end_time = time.perf_counter()
-        result_queue.put(end_time - start_time)
+        result_queue.put((method_result, end_time - start_time))
     except Exception as e:
         result_queue.put(e)
 
@@ -127,6 +160,7 @@ def benchmark_graph_methods(
 
                 for i, graph in enumerate(graphs_in_file):
                     print(f"  Test... Graph {i + 1}/{total_graphs}", end="\r")
+                    rslt = None
 
                     for method in methods_list:
                         method_name = method.__name__
@@ -152,17 +186,78 @@ def benchmark_graph_methods(
                                 break
                             elif p.exitcode != 0:
                                 error_occurred = True
+                                log_error_matrix(
+                                    filename,
+                                    i,
+                                    method_name,
+                                    f"Process crashed (Exit code {p.exitcode})",
+                                    graph,
+                                )
                                 break
                             else:
                                 try:
                                     result = result_queue.get_nowait()
                                     if isinstance(result, Exception):
                                         error_occurred = True
+                                        log_error_matrix(
+                                            filename, i, method_name, str(result), graph
+                                        )
                                         break
-                                    else:
-                                        run_times.append(result)
+
+                                    method_result, exec_time = result
+                                    if rslt is None:
+                                        rslt = method_result
+                                    elif method_result != rslt:
+                                        print(f"\n\n{'!' * 80}")
+                                        print(
+                                            f"[CRITICAL ERROR] Result Mismatch on Graph {i + 1} in {filename}"
+                                        )
+                                        print(
+                                            f"Method '{method_name}' returned a different result than previous methods."
+                                        )
+                                        print(f"Reference Result: {rslt}")
+                                        print(f"Current Result  : {method_result}")
+                                        print(f"{'!' * 80}\n")
+                                        # Écriture dans CRITICAL.txt
+                                        try:
+                                            with open(
+                                                "CRITICAL.txt", "w", encoding="utf-8"
+                                            ) as f_crit:
+                                                try:
+                                                    adj_matrix = nx.to_numpy_array(
+                                                        graph
+                                                    )
+                                                    for row in adj_matrix:
+                                                        row_str = " ".join(
+                                                            f"{x:g}" for x in row
+                                                        )
+                                                        f_crit.write(f"{row_str}\n")
+                                                except Exception as e_mat:
+                                                    f_crit.write(
+                                                        f"Error converting graph to matrix: {e_mat}\n"
+                                                    )
+                                                    f_crit.write(
+                                                        f"Raw graph object: {graph}\n"
+                                                    )
+                                            print(
+                                                "Data successfully written to 'CRITICAL.txt'."
+                                            )
+                                        except Exception as io_e:
+                                            print(
+                                                f"Failed to write CRITICAL.txt: {io_e}"
+                                            )
+                                        sys.exit(1)
+
+                                    run_times.append(result)
                                 except QueueEmpty:
                                     error_occurred = True
+                                    log_error_matrix(
+                                        filename,
+                                        i,
+                                        method_name,
+                                        "Queue Empty (No result returned)",
+                                        graph,
+                                    )
                                     break
 
                         if timeout_occurred:
@@ -271,25 +366,25 @@ if __name__ == "__main__":
         get_decycling_number_mif_v3,
     ]
 
-    # benchmark_graph_methods(
-    #     directory_path="Benchmark graphs/diameter",
-    #     methods_list=METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="benchmark_results_diameter_3x.txt",
-    # )
-    #
-    # benchmark_graph_methods(
-    #     directory_path="Benchmark graphs/chromatic number",
-    #     methods_list=METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="benchmark_results_chrom_number_3x.txt",
-    # )
+    benchmark_graph_methods(
+        directory_path="Benchmark graphs/diameter",
+        methods_list=METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="better_benchmark_results_diameter.txt",
+    )
+
+    benchmark_graph_methods(
+        directory_path="Benchmark graphs/chromatic number",
+        methods_list=METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="better_benchmark_results_chrom_number.txt",
+    )
 
     benchmark_graph_methods(
         directory_path="Benchmark graphs/density",
         methods_list=METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="benchmark_results_density_3x.txt",
+        output_filename="better_benchmark_results_density.txt",
     )
 
 # graphs = parse_adj_matrices("Benchmark graphs/equal_to_1.mat")
