@@ -97,7 +97,7 @@ def get_max_indep_set(G):
 
         return res
 
-    for u, v in itertools.combinations(sorted(G.nodes), 2):
+    for u, v in itertools.combinations(set(G.nodes), 2):
         nb_u = set(nx.neighbors(G, u))
         nb_v = set(nx.neighbors(G, v))
         if (nb_v | {v}).issubset(nb_u | {u}):
