@@ -270,25 +270,67 @@ if __name__ == "__main__":
         get_decycling_number_mif_v3,
     ]
 
+    # benchmark_graph_methods(
+    #     directory_path="Benchmark graphs/diameter",
+    #     methods_list=METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="benchmark_results_diameter.txt",
+    # )
+    #
+    # benchmark_graph_methods(
+    #     directory_path="Benchmark graphs/chromatic number",
+    #     methods_list=METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="benchmark_results_chrom_number.txt",
+    # )
+    #
+    # benchmark_graph_methods(
+    #     directory_path="Benchmark graphs/density",
+    #     methods_list=METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="benchmark_results_density.txt",
+    # )
+
     benchmark_graph_methods(
-        directory_path="Benchmark graphs/diameter",
+        directory_path="Benchmark graphs/domination number",
         methods_list=METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="benchmark_results_diameter.txt",
+        output_filename="benchmark_results_domination_number.txt",
     )
 
     benchmark_graph_methods(
-        directory_path="Benchmark graphs/chromatic number",
+        directory_path="Benchmark graphs/girth",
         methods_list=METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="benchmark_results_chrom_number.txt",
+        output_filename="benchmark_results_girth.txt",
     )
 
     benchmark_graph_methods(
-        directory_path="Benchmark graphs/density",
+        directory_path="Benchmark graphs/longest induced cycle",
         methods_list=METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="benchmark_results_density.txt",
+        output_filename="benchmark_results_long_ind_cyc.txt",
+    )
+
+    benchmark_graph_methods(
+        directory_path="Benchmark graphs/radius",
+        methods_list=METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="benchmark_results_radius.txt",
+    )
+
+    benchmark_graph_methods(
+        directory_path="Benchmark graphs/treewidth",
+        methods_list=METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="benchmark_results_treewidth.txt",
+    )
+
+    benchmark_graph_methods(
+        directory_path="Benchmark graphs/vertex connectivity",
+        methods_list=METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="benchmark_results_vertex_con.txt",
     )
 
 # graphs = parse_adj_matrices("Benchmark graphs/equal_to_1.mat")
