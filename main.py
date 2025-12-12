@@ -1,6 +1,5 @@
 import datetime
 import multiprocessing
-import sys
 
 import networkx as nx
 from pyvis.network import Network
@@ -48,34 +47,6 @@ def parse_adj_matrices(file):
         return []
 
     return graphs
-
-
-def log_error_matrix(filename, graph_idx, method_name, error_message, graph):
-    try:
-        with open("errors.txt", "a", encoding="utf-8") as f_err:
-            f_err.write("=" * 40 + "\n")
-            f_err.write(f"DATE      : {time.ctime()}\n")
-            f_err.write(f"FILE      : {filename}\n")
-            f_err.write(f"GRAPH IDX : {graph_idx + 1}\n")
-            f_err.write(f"METHOD    : {method_name}\n")
-            f_err.write(f"ERROR     : {error_message}\n")
-            f_err.write("-" * 40 + "\n")
-            f_err.write("ADJACENCY MATRIX :\n")
-
-            try:
-                # Conversion du graphe NetworkX en matrice NumPy
-                adj_matrix = nx.to_numpy_array(graph)
-                for row in adj_matrix:
-                    # Formatage simple des nombres (général)
-                    row_str = " ".join(f"{x:g}" for x in row)
-                    f_err.write(f"{row_str}\n")
-            except Exception as e_mat:
-                f_err.write(f"Error converting graph to matrix: {e_mat}\n")
-                f_err.write(f"Raw graph object: {graph}\n")
-
-            f_err.write("=" * 40 + "\n\n")
-    except Exception as io_e:
-        print(f"[WARNING] Could not write to errors.txt: {io_e}")
 
 
 def run_method_in_process(method_func, graph_data, result_queue):
