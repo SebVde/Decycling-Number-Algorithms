@@ -1,5 +1,15 @@
+import io
+
 import networkx as nx
 import itertools
+
+import numpy as np
+
+
+def sort_nodes(node):
+    is_tuple = isinstance(node, tuple)
+    safe_val = str(node)
+    return (is_tuple, safe_val)
 
 
 def get_non_trivial_components(G):
@@ -21,7 +31,7 @@ def construct_H(G, F, nb):
 
 
 def is_foldable(G, v):
-    nb = sorted(nx.neighbors(G, v))
+    nb = sorted(nx.neighbors(G, v), key=sort_nodes)
     for x, y, z in itertools.combinations(nb, 3):
         if not (G.has_edge(x, y) or G.has_edge(y, z) or G.has_edge(z, x)):
             # If no edges between x-y-z, there is an anti-triangle so not foldable
@@ -97,7 +107,7 @@ def get_max_indep_set(G):
 
         return res
 
-    for u, v in itertools.combinations(set(G.nodes), 2):
+    for u, v in itertools.combinations(sorted(G.nodes, key=sort_nodes), 2):
         nb_u = set(nx.neighbors(G, u))
         nb_v = set(nx.neighbors(G, v))
         if (nb_v | {v}).issubset(nb_u | {u}):
@@ -168,7 +178,7 @@ def get_mif_len(G, F, active_v):
                 if connections > 1:
                     vertices_to_remove.add(v)
 
-            v_T = list(sorted(T))[0]
+            v_T = list(sorted(T, key=sort_nodes))[0]
 
             for n in T - {v_T}:
                 new_G = nx.contracted_nodes(new_G, v_T, n, self_loops=False)
@@ -198,25 +208,25 @@ def main_procedure(G, F, active_v):
         if max_degree < 2:
             return len(G.nodes)
         else:
-            t = list(sorted(n for n, d in G.degree() if d >= 2))[0]
+            t = list(sorted([n for n, d in G.degree() if d >= 2], key=sort_nodes))[0]
             new_G = nx.subgraph(G, G.nodes - {t})
             return max(
                 get_mif_len(G, F | {t}, active_v), get_mif_len(new_G, F, active_v)
             )
 
     if active_v is None:
-        active_v = list(sorted(F))[0]
+        active_v = list(sorted(F, key=sort_nodes))[0]
 
     nb = set(nx.neighbors(G, active_v))
     if set(G.nodes) - F == nb:
         return len(F) + get_max_indep_set(construct_H(G, F - {active_v}, nb))
 
-    for v in sorted(nb):
+    for v in sorted(nb, key=sort_nodes):
         gen_nb = get_generalized_neighbors(G, F, active_v, v)
         if len(gen_nb) < 2:
             return get_mif_len(G, F | {v}, active_v)
 
-    for v in sorted(nb):
+    for v in sorted(nb, key=sort_nodes):
         gen_nb = get_generalized_neighbors(G, F, active_v, v)
         if len(gen_nb) > 3:
             return max(
@@ -224,7 +234,7 @@ def main_procedure(G, F, active_v):
                 get_mif_len(nx.subgraph(G, G.nodes - {v}), F, active_v),
             )
 
-    for v in sorted(nb):
+    for v in sorted(nb, key=sort_nodes):
         gen_nb = get_generalized_neighbors(G, F, active_v, v)
         if len(gen_nb) == 2:
             return max(
@@ -283,3 +293,30 @@ def get_decycling_number_mif_v2(G):
         return 0
 
     return len(G.nodes) - get_mif_len(G, set(), None)
+
+
+# if __name__ == "__main__":
+#     block = """0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 1 0 1 1
+# 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 1 1 1
+# 0 0 0 0 0 0 0 1 0 1 1 1 0 0 0 0 1 0 0 1
+# 0 0 0 0 0 0 1 0 1 0 1 1 0 0 0 0 0 1 1 0
+# 0 0 0 0 0 1 1 0 0 0 1 0 1 0 0 0 1 0 1 0
+# 0 0 0 0 1 0 0 1 0 0 0 1 0 1 0 0 0 1 0 1
+# 0 0 0 1 1 0 0 1 0 0 0 0 0 1 1 0 0 0 0 1
+# 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 0 0 1 0
+# 0 0 0 1 0 0 0 0 0 1 0 0 1 0 0 1 1 0 0 1
+# 0 0 1 0 0 0 0 0 1 0 0 0 0 1 1 0 0 1 1 0
+# 0 0 1 1 1 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0
+# 0 0 1 1 0 1 0 0 0 0 0 0 1 0 1 1 0 0 0 0
+# 0 1 0 0 1 0 0 1 1 0 0 1 0 1 0 0 0 0 0 0
+# 1 0 0 0 0 1 1 0 0 1 1 0 1 0 0 0 0 0 0 0
+# 0 1 0 0 0 0 1 0 0 1 1 1 0 0 0 0 1 0 0 0
+# 1 0 0 0 0 0 0 1 1 0 1 1 0 0 0 0 0 1 0 0
+# 1 0 1 0 1 0 0 0 1 0 0 0 0 0 1 0 0 1 0 0
+# 0 1 0 1 0 1 0 0 0 1 0 0 0 0 0 1 1 0 0 0
+# 1 1 0 1 1 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0
+# 1 1 1 0 0 1 1 0 1 0 0 0 0 0 0 0 0 0 0 0"""
+#
+#     np_matrix = np.loadtxt(io.StringIO(block), dtype=int)
+#     G = nx.from_numpy_array(np_matrix)
+#     print(get_decycling_number_mif_v2(G))
