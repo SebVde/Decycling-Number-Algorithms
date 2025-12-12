@@ -274,21 +274,21 @@ if __name__ == "__main__":
         directory_path="Benchmark graphs/diameter",
         methods_list=METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="better_benchmark_results_diameter.txt",
+        output_filename="benchmark_results_diameter.txt",
     )
 
     benchmark_graph_methods(
         directory_path="Benchmark graphs/chromatic number",
         methods_list=METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="better_benchmark_results_chrom_number.txt",
+        output_filename="benchmark_results_chrom_number.txt",
     )
 
     benchmark_graph_methods(
         directory_path="Benchmark graphs/density",
         methods_list=METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="better_benchmark_results_density.txt",
+        output_filename="benchmark_results_density.txt",
     )
 
 # graphs = parse_adj_matrices("Benchmark graphs/equal_to_1.mat")
