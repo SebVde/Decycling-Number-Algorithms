@@ -687,6 +687,7 @@ def benchmark_approx_comparison(
     timeout_seconds,
     output_filename="benchmark_comparison_results.txt",
 ):
+
     benchmark_start_time = time.perf_counter()
 
     if not os.path.isdir(directory_path):
@@ -694,14 +695,12 @@ def benchmark_approx_comparison(
         return
 
     files_to_process = [f for f in os.listdir(directory_path) if f.endswith(".npz")]
-
     if not files_to_process:
         print(f"No file to process has been found in folder '{directory_path}'.")
         return
 
     try:
         with open(output_filename, "w", encoding="utf-8") as f_out:
-
             f_out.write("=" * 100 + "\n")
             f_out.write(f"APPROXIMATION COMPARISON & RANKING\n")
             f_out.write(f"Date: {time.ctime()}\n")
@@ -714,15 +713,9 @@ def benchmark_approx_comparison(
             for filename in files_to_process:
                 file_header_line = f"Treating: {filename}"
                 file_separator = "=" * 100
-
-                print(f"\n{file_separator}")
-                print(file_header_line)
-                print(f"{file_separator}")
-
                 f_out.write(f"{file_separator}\n")
                 f_out.write(f"{file_header_line}\n")
                 f_out.write(f"{file_separator}\n\n")
-
                 filepath = os.path.join(directory_path, filename)
 
                 try:
@@ -730,19 +723,15 @@ def benchmark_approx_comparison(
                     total_graphs = len(graphs_in_file)
                     if total_graphs == 0:
                         continue
-                    msg = f"  File loaded: {total_graphs} graphs."
-                    print(msg)
-                    f_out.write(msg + "\n")
+                    f_out.write(f"  File loaded: {total_graphs} graphs.\n")
                 except Exception as e:
                     print(f"Error loading graphs from '{filename}': {e}")
                     continue
 
-                # Structure de données pour les stats
-                # wins = nombre de fois où l'algo a trouvé la meilleure solution (ou égalité)
                 stats = {
                     m.__name__: {
                         "times": [],
-                        "results": [],  # On stocke les k trouvés pour info
+                        "results": [],
                         "wins": 0,
                         "timeouts": 0,
                         "errors": 0,
@@ -751,10 +740,6 @@ def benchmark_approx_comparison(
                 }
 
                 for i, graph in enumerate(graphs_in_file):
-                    print(f"  Competing... Graph {i + 1}/{total_graphs}", end="\r")
-
-                    # Stocke les résultats de CE graphe pour comparaison immédiate
-                    # method_name -> best_k_for_this_graph
                     current_graph_results = {}
 
                     for method in methods_list:
@@ -767,7 +752,6 @@ def benchmark_approx_comparison(
                         timeout_occurred = False
                         error_occurred = False
 
-                        # 3 Runs par algo, on garde le meilleur résultat (min k)
                         for _ in range(3):
                             q = multiprocessing.Queue()
                             p = multiprocessing.Process(
@@ -789,18 +773,13 @@ def benchmark_approx_comparison(
                                     if isinstance(res, Exception):
                                         error_occurred = True
                                     else:
-                                        # res est un tuple (k, time)
                                         k_val, t_val = res
 
-                                        # Logique: On veut minimiser k.
-                                        # Si k est égal, on ne change rien (ou on pourrait prendre le meilleur temps)
                                         if k_val < best_run_k:
                                             best_run_k = k_val
                                             best_run_time = t_val
                                             run_valid = True
                                         elif k_val == best_run_k:
-                                            # Optionnel: Si k égal, on garde le run le plus rapide ?
-                                            # Pour l'instant on garde le premier trouvé ou on moyenne
                                             pass
 
                                 except QueueEmpty:
@@ -816,20 +795,14 @@ def benchmark_approx_comparison(
                             else:
                                 stats[method_name]["errors"] += 1
 
-                    # --- COMPARAISON DU GRAPHE ---
-                    # Quel est le min k trouvé parmi tous les algos qui ont réussi ?
                     if current_graph_results:
                         min_k_global = min(current_graph_results.values())
-
-                        # On donne un "point" à tous ceux qui ont trouvé ce min
                         for m_name, k_val in current_graph_results.items():
                             if k_val == min_k_global:
                                 stats[m_name]["wins"] += 1
 
-                print(f"\n  Finished competition for {filename}.\n")
                 f_out.write("\n  Results table (Sorted by Best Solution Rate):\n\n")
 
-                # Préparation du tableau
                 col_methode = max(len(m.__name__) for m in methods_list) + 2
                 col_methode = max(col_methode, 15)
                 col_time = 12
@@ -837,7 +810,7 @@ def benchmark_approx_comparison(
 
                 table_header = (
                     f"| {'Method':<{col_methode}} "
-                    f"| {'Best Sol %':>{col_pct}} "  # Pourcentage de "Wins"
+                    f"| {'Best Sol %':>{col_pct}} "
                     f"| {'Mean Time (s)':>{col_pct}} "
                     f"| {'Median Time (s)':>{col_pct}} "
                     f"| {'Success (%)':>{col_time}} |"
@@ -850,22 +823,18 @@ def benchmark_approx_comparison(
                     f"|{'-' * (col_time + 1)}|"
                 )
 
-                # Calcul des données finales pour le tableau
                 rows = []
                 for method_name, data in stats.items():
                     num_success = len(data["times"])
                     success_pct = (num_success / total_graphs) * 100
-
-                    # Le "Best Solution %" est basé sur le nombre total de graphes
-                    # C'est le taux de "Victoire"
                     win_pct = (data["wins"] / total_graphs) * 100
-
                     times_arr = np.array(data["times"])
+
                     if num_success > 0:
                         s_mean = np.mean(times_arr)
                         s_median = np.median(times_arr)
                     else:
-                        s_mean = float("inf")  # Pour le tri, les échecs vont à la fin
+                        s_mean = float("inf")
                         s_median = float("inf")
 
                     row_obj = {
@@ -877,13 +846,7 @@ def benchmark_approx_comparison(
                     }
                     rows.append(row_obj)
 
-                # --- TRI DES RÉSULTATS ---
-                # Critère 1: Taux de victoire (Descendant)
-                # Critère 2: Temps moyen (Ascendant) - en cas d'égalité de score
                 rows.sort(key=lambda x: (-x["win_pct"], x["mean_time"]))
-
-                print(table_header)
-                print(table_separator)
                 f_out.write(table_header + "\n")
                 f_out.write(table_separator + "\n")
 
@@ -898,7 +861,6 @@ def benchmark_approx_comparison(
                         if row["median_time"] != float("inf")
                         else "---"
                     )
-
                     line = (
                         f"| {row['name']:<{col_methode}} "
                         f"| {row['win_pct']:>{col_pct - 3}.2f} % "
@@ -906,7 +868,6 @@ def benchmark_approx_comparison(
                         f"| {med_str:>{col_pct}} "
                         f"| {row['success_pct']:>{col_time - 3}.2f} % |"
                     )
-                    print(line)
                     f_out.write(line + "\n")
 
                 f_out.write("\n")
@@ -914,14 +875,12 @@ def benchmark_approx_comparison(
             benchmark_end_time = time.perf_counter()
             total_seconds = benchmark_end_time - benchmark_start_time
             formatted_time = str(datetime.timedelta(seconds=total_seconds))
-
             end_msg = (
                 f"\n{file_separator}\n"
                 f"Comparison Benchmark over. Results in '{output_filename}'.\n"
                 f"Total execution time: {formatted_time}\n"
                 f"{file_separator}"
             )
-            print(end_msg)
             f_out.write(end_msg + "\n")
 
     except IOError as e:
