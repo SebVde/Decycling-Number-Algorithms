@@ -8,12 +8,12 @@ from queue import Empty as QueueEmpty
 import networkx as nx
 import numpy as np
 
-from exact_mif import get_decycling_number_razgon
-from exact_mif_v2 import get_decycling_number_fomin
-from exact_mif_v3 import get_decycling_number_xiao
-from bafna_fvs import approx_decycling_number_bafna
-from bar_yehuda_fvs import approx_decycling_number_bar_yehuda
-from constr_heur import approx_decycling_number_stanojevic
+from razgon import get_decycling_number_razgon
+from fomin import get_decycling_number_fomin
+from xiao import get_decycling_number_xiao
+from bafna import approx_decycling_number_bafna
+from bar_yehuda import approx_decycling_number_bar_yehuda
+from stanojevic import approx_decycling_number_stanojevic
 
 
 sys.setrecursionlimit(10000)
