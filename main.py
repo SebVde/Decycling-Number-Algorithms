@@ -1,82 +1,90 @@
 import datetime
 import multiprocessing
-
-import networkx as nx
-from pyvis.network import Network
-from exact_mif import get_decycling_number_mif
-from naive import get_decycling_number
-from exact_mif_v2 import get_decycling_number_mif_v2
-from exact_mif_v3 import get_decycling_number_mif_v3
-from bafna_fvs import get_decycling_number_2_approx
-from constr_heur import get_decycling_number_constr_heur
-import re
-import io
-import numpy as np
+import sys
 import time
 import os
 from queue import Empty as QueueEmpty
 
-all_matrices = []
+import networkx as nx
+import numpy as np
+
+from exact_mif import get_decycling_number_razgon
+from exact_mif_v2 import get_decycling_number_fomin
+from exact_mif_v3 import get_decycling_number_xiao
+from bafna_fvs import approx_decycling_number_bafna
+from bar_yehuda_fvs import approx_decycling_number_bar_yehuda
+from constr_heur import approx_decycling_number_stanojevic
 
 
-def parse_adj_matrices(file):
+sys.setrecursionlimit(10000)
+
+
+def parse_npz_file(file_path, has_dn=False):
     graphs = []
     try:
-        with open(file, "r") as f:
-            content = f.read()
-
-        matrix_blocks = re.split(r"\n\s*\n", content.strip())
-
-        for i, block in enumerate(matrix_blocks):
-            if not block.strip():
-                continue
-
-            try:
-                all_matrices.append(block)
-                np_matrix = np.loadtxt(io.StringIO(block), dtype=int)
-                G = nx.from_numpy_array(np_matrix)
-                graphs.append(G)
-                if len(graphs) == 20:
-                    break
-
-            except Exception as e:
-                print(f"Error at block {i + 1}: {e}")
-
+        with np.load(file_path, allow_pickle=True) as data:
+            if "graphs" in data:
+                matrices = data["graphs"].tolist()
+                for i, matrix in enumerate(matrices):
+                    G = nx.from_scipy_sparse_array(matrix)
+                    if has_dn:
+                        dn = data["decycling_numbers"][i]
+                        G.graph["decycling_number"] = dn
+                    graphs.append(G)
+            else:
+                print(f"Error: No 'graphs' key found in '{file_path}'.")
     except FileNotFoundError:
-        print(f"Error : The file '{file}' was not found.")
-        return []
-
+        print(f"Error: The file '{file_path}' was not found.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
     return graphs
 
 
-def run_method_in_process(method_func, graph_data, result_queue):
+def run_method_get_time_and_result(method_func, graph_data, result_queue):
     try:
         start_time = time.perf_counter()
-        method_func(graph_data)
+        result_value = method_func(graph_data)
         end_time = time.perf_counter()
-        result_queue.put(end_time - start_time)
+        result_queue.put((end_time - start_time, result_value))
     except Exception as e:
         result_queue.put(e)
 
 
-def benchmark_graph_methods(
+def run_method_get_result(method_func, graph_data, result_queue):
+    try:
+        result = method_func(graph_data)
+        result_queue.put(result)
+    except Exception as e:
+        result_queue.put(e)
+
+
+def run_approx_method_get_result_and_time(method_func, graph_data, result_queue):
+    try:
+        start_time = time.perf_counter()
+        k = method_func(graph_data)
+        end_time = time.perf_counter()
+        duration = end_time - start_time
+        result_queue.put((k, duration))
+    except Exception as e:
+        result_queue.put(e)
+
+
+def benchmark_exact_exec_time(
     directory_path,
     methods_list,
     timeout_seconds,
-    output_filename="benchmark_results.txt",
+    output_filename,
 ):
+
     benchmark_start_time = time.perf_counter()
-    file_pattern = re.compile(r"v_(\d+)_D_(\d+)\.mat")
 
     if not os.path.isdir(directory_path):
         print(f"Error : Folder '{directory_path}' does not exist.")
         return
 
-    # files_to_process = sorted(
-    #     f for f in os.listdir(directory_path) if file_pattern.match(f)
-    # )
-
-    files_to_process = [f for f in os.listdir(directory_path)]
+    files_to_process = sorted(
+        f for f in os.listdir(directory_path) if f.endswith(".npz")
+    )
 
     if not files_to_process:
         print(f"No file to process has been found in folder '{directory_path}'.")
@@ -93,13 +101,9 @@ def benchmark_graph_methods(
             f_out.write("=" * 80 + "\n\n")
 
             for filename in files_to_process:
-
+                file_results_values = []
                 file_header_line = f"Treating: {filename}"
                 file_separator = "=" * 80
-
-                print(f"\n{file_separator}")
-                print(file_header_line)
-                print(f"{file_separator}")
 
                 f_out.write(f"{file_separator}\n")
                 f_out.write(f"{file_header_line}\n")
@@ -108,14 +112,12 @@ def benchmark_graph_methods(
                 filepath = os.path.join(directory_path, filename)
 
                 try:
-                    graphs_in_file = parse_adj_matrices(filepath)
+                    graphs_in_file = parse_npz_file(filepath)
                     total_graphs = len(graphs_in_file)
                     if total_graphs == 0:
-                        print(f"No graphs loaded from '{filename}'. Skipping.")
+                        # Skip le fichier
                         continue
-                    msg = f"  File loaded: {total_graphs} graphs."
-                    print(msg)
-                    f_out.write(msg + "\n")
+                    f_out.write(f"  File loaded: {total_graphs} graphs.\n")
 
                 except Exception as e:
                     print(f"Error loading graphs from '{filename}': {e}")
@@ -127,20 +129,17 @@ def benchmark_graph_methods(
                 }
 
                 for i, graph in enumerate(graphs_in_file):
-                    print(f"  Test... Graph {i + 1}/{total_graphs}", end="\r")
-
+                    current_graph_result_value = None
                     for method in methods_list:
                         method_name = method.__name__
-
                         run_times = []
                         timeout_occurred = False
                         error_occurred = False
 
                         for _ in range(3):
                             result_queue = multiprocessing.Queue()
-
                             p = multiprocessing.Process(
-                                target=run_method_in_process,
+                                target=run_method_get_time_and_result,
                                 args=(method, graph, result_queue),
                             )
                             p.start()
@@ -161,7 +160,19 @@ def benchmark_graph_methods(
                                         error_occurred = True
                                         break
                                     else:
-                                        run_times.append(result)
+                                        duration, val = result
+                                        run_times.append(duration)
+
+                                        if current_graph_result_value is None:
+                                            current_graph_result_value = val
+                                        elif current_graph_result_value != val:
+                                            print(
+                                                f"\n Logic error: Inconsistent results for graph {i + 1} in file '{filename}' between methods. "
+                                            )
+                                            print(
+                                                f"Method {method_name} returned {val}, previous was {current_graph_result_value}."
+                                            )
+                                            return
                                 except QueueEmpty:
                                     error_occurred = True
                                     break
@@ -174,11 +185,15 @@ def benchmark_graph_methods(
                             median_time = np.median(run_times)
                             results[method_name]["times"].append(median_time)
 
-                print(f"\n  Finished tests for {filename}.\n")
-                f_out.write("\n  Finished tests. Results incoming...\n\n")
+                    if current_graph_result_value is None:
+                        file_results_values.append("Error/Timeout")
+                    else:
+                        file_results_values.append(current_graph_result_value)
+
+                f_out.write("\n  Finished tests. See results.\n\n")
 
                 col_methode = max(len(m.__name__) for m in methods_list) + 2
-                col_methode = max(col_methode, 10)  # min 10
+                col_methode = max(col_methode, 10)
                 col_time = 12
                 col_pct = 12
 
@@ -203,8 +218,6 @@ def benchmark_graph_methods(
                     f"|{'-' * (col_pct + 1)}|"
                 )
 
-                print(table_header)
-                print(table_separator)
                 f_out.write(table_header + "\n")
                 f_out.write(table_separator + "\n")
 
@@ -237,7 +250,222 @@ def benchmark_graph_methods(
                         f"| {error_percent:>{col_pct - 3}.2f} % |"
                     )
 
-                    print(row_data)
+                    f_out.write(row_data + "\n")
+                f_out.write("\n")
+
+            benchmark_end_time = time.perf_counter()
+            total_seconds = benchmark_end_time - benchmark_start_time
+            formatted_time = str(datetime.timedelta(seconds=total_seconds))
+            f_out.write(f"\n{file_separator}\n")
+            f_out.write("Benchmark over.\n")
+            f_out.write(f"Total execution time: {formatted_time}\n")
+
+    except IOError as e:
+        print(f"Error: Impossible to write in '{output_filename}': {e}")
+    except Exception as e:
+        print(f"Error : {e}")
+
+
+def benchmark_approximation_quality(
+    directory_path,
+    approx_methods_list,
+    exact_method_func,
+    timeout_seconds,
+    output_filename,
+):
+
+    benchmark_start_time = time.perf_counter()
+
+    if not os.path.isdir(directory_path):
+        print(f"Error : Folder '{directory_path}' does not exist.")
+        return
+
+    files_to_process = [f for f in os.listdir(directory_path) if f.endswith(".npz")]
+
+    if not files_to_process:
+        print(f"No file to process has been found in folder '{directory_path}'.")
+        return
+
+    try:
+        with open(output_filename, "w", encoding="utf-8") as f_out:
+            f_out.write("=" * 100 + "\n")
+            f_out.write(f"APPROXIMATION QUALITY BENCHMARK\n")
+            f_out.write(f"Date: {time.ctime()}\n")
+            f_out.write(f"Ref Exact Method: {exact_method_func.__name__}\n")
+            f_out.write(f"Timeout per graph: {timeout_seconds}s\n")
+            f_out.write("=" * 100 + "\n\n")
+
+            for filename in files_to_process:
+                file_header_line = f"Treating: {filename}"
+                file_separator = "=" * 100
+                f_out.write(f"{file_separator}\n")
+                f_out.write(f"{file_header_line}\n")
+                f_out.write(f"{file_separator}\n\n")
+                filepath = os.path.join(directory_path, filename)
+
+                try:
+                    graphs_in_file = parse_npz_file(filepath)
+                    total_graphs = len(graphs_in_file)
+                    if total_graphs == 0:
+                        continue
+                    f_out.write(f"  File loaded: {total_graphs} graphs.\n")
+                except Exception as e:
+                    print(f"Error loading graphs from '{filename}': {e}")
+                    continue
+
+                ratios_results = {m.__name__: [] for m in approx_methods_list}
+                meta_stats = {
+                    m.__name__: {"timeouts": 0, "errors": 0, "success": 0}
+                    for m in approx_methods_list
+                }
+                skipped_graphs_exact_fail = 0
+
+                for i, graph in enumerate(graphs_in_file):
+                    exact_queue = multiprocessing.Queue()
+                    p_exact = multiprocessing.Process(
+                        target=run_method_get_result,
+                        args=(exact_method_func, graph, exact_queue),
+                    )
+                    p_exact.start()
+                    p_exact.join(timeout=timeout_seconds)
+
+                    k_opt = None
+                    if p_exact.is_alive():
+                        p_exact.terminate()
+                        p_exact.join()
+                        skipped_graphs_exact_fail += 1
+                        # Skip ce graphe
+                        continue
+
+                    try:
+                        res_exact = exact_queue.get_nowait()
+                        if isinstance(res_exact, Exception):
+                            skipped_graphs_exact_fail += 1
+                            continue
+                        k_opt = res_exact
+                    except QueueEmpty:
+                        skipped_graphs_exact_fail += 1
+                        continue
+
+                    for method in approx_methods_list:
+                        method_name = method.__name__
+                        best_k_approx = float("inf")
+                        valid_run_found = False
+                        timeout_occurred = False
+                        error_occurred = False
+
+                        for _ in range(3):
+                            approx_queue = multiprocessing.Queue()
+                            p_approx = multiprocessing.Process(
+                                target=run_method_get_result,
+                                args=(method, graph, approx_queue),
+                            )
+                            p_approx.start()
+                            p_approx.join(timeout=timeout_seconds)
+
+                            if p_approx.is_alive():
+                                p_approx.terminate()
+                                p_approx.join()
+                                timeout_occurred = True
+                            elif p_approx.exitcode != 0:
+                                error_occurred = True
+                            else:
+                                try:
+                                    res_approx = approx_queue.get_nowait()
+                                    if isinstance(res_approx, Exception):
+                                        error_occurred = True
+                                    else:
+                                        valid_run_found = True
+                                        if res_approx < best_k_approx:
+                                            best_k_approx = res_approx
+                                except QueueEmpty:
+                                    error_occurred = True
+
+                        if valid_run_found:
+                            meta_stats[method_name]["success"] += 1
+                            if k_opt == 0:
+                                ratio = 1.0 if best_k_approx == 0 else 999.0
+                            else:
+                                ratio = best_k_approx / k_opt
+                            ratios_results[method_name].append(ratio)
+
+                        else:
+                            if timeout_occurred:
+                                meta_stats[method_name]["timeouts"] += 1
+                            else:
+                                meta_stats[method_name]["errors"] += 1
+
+                if skipped_graphs_exact_fail > 0:
+                    print(
+                        f"  WARNING: {skipped_graphs_exact_fail} graphs skipped because Exact Method failed/timeout."
+                    )
+                    f_out.write(
+                        f"  WARNING: {skipped_graphs_exact_fail} graphs skipped because Exact Method failed/timeout.\n"
+                    )
+
+                f_out.write("\n Finished tests. See results.\n\n")
+
+                col_methode = max(len(m.__name__) for m in approx_methods_list) + 2
+                col_methode = max(col_methode, 15)
+                col_val = 14
+                col_pct = 12
+                col_exact = 10
+
+                table_header = (
+                    f"| {'Method':<{col_methode}} "
+                    f"| {'Exact Matches':>{col_exact}} "
+                    f"| {'Min Ratio':>{col_val}} "
+                    f"| {'Max Ratio':>{col_val}} "
+                    f"| {'Mean Ratio':>{col_val}} "
+                    f"| {'Median Ratio':>{col_val}} "
+                    f"| {'Success (%)':>{col_pct}} "
+                    f"| {'Timeout (%)':>{col_pct}} |"
+                )
+
+                table_separator = (
+                    f"|{'-' * (col_methode + 1)}"
+                    f"|{'-' * (col_exact + 1)}"
+                    f"|{'-' * (col_val + 1)}"
+                    f"|{'-' * (col_val + 1)}"
+                    f"|{'-' * (col_val + 1)}"
+                    f"|{'-' * (col_pct + 1)}"
+                    f"|{'-' * (col_pct + 1)}|"
+                )
+
+                f_out.write(table_header + "\n")
+                f_out.write(table_separator + "\n")
+
+                effective_total = total_graphs - skipped_graphs_exact_fail
+                if effective_total <= 0:
+                    effective_total = 1
+
+                for method_name, ratios_list in ratios_results.items():
+                    ratios_arr = np.array(ratios_list)
+                    stats = meta_stats[method_name]
+                    success_pct = (stats["success"] / effective_total) * 100
+                    timeout_pct = (stats["timeouts"] / effective_total) * 100
+
+                    if len(ratios_arr) > 0:
+                        r_min = f"{np.min(ratios_arr):.4f}"
+                        r_max = f"{np.max(ratios_arr):.4f}"
+                        r_mean = f"{np.mean(ratios_arr):.4f}"
+                        r_median = f"{np.median(ratios_arr):.4f}"
+                        r_exact_matches = np.sum(ratios_arr == 1.0)
+
+                    else:
+                        r_mean = r_median = r_max = r_min = r_exact_matches = "---"
+
+                    row_data = (
+                        f"| {method_name:<{col_methode}} "
+                        f"| {r_exact_matches:>{col_exact}} "
+                        f"| {r_min:>{col_val}} "
+                        f"| {r_max:>{col_val}} "
+                        f"| {r_mean:>{col_val}} "
+                        f"| {r_median:>{col_val}} "
+                        f"| {success_pct:>{col_pct - 3}.2f} % "
+                        f"| {timeout_pct:>{col_pct - 3}.2f} % |"
+                    )
+
                     f_out.write(row_data + "\n")
 
                 f_out.write("\n")
@@ -245,132 +473,575 @@ def benchmark_graph_methods(
             benchmark_end_time = time.perf_counter()
             total_seconds = benchmark_end_time - benchmark_start_time
             formatted_time = str(datetime.timedelta(seconds=total_seconds))
-            print(f"\n{file_separator}")
-            print(f"Benchmark over. Results written in '{output_filename}'.")
-            print(f"Total execution time: {formatted_time}")
-            print(f"{file_separator}")
-            f_out.write(f"\n{file_separator}\n")
-            f_out.write("Benchmark over.\n")
-            f_out.write(f"Total execution time: {formatted_time}\n")
+            end_msg = (
+                f"\n{file_separator}\n"
+                f"Quality Benchmark over. Results in '{output_filename}'.\n"
+                f"Total execution time: {formatted_time}\n"
+                f"{file_separator}"
+            )
+            f_out.write(end_msg + "\n")
 
     except IOError as e:
         print(f"Error: Impossible to write in '{output_filename}': {e}")
-
     except Exception as e:
-        print(f"Error : {e}")
+        print(f"Error global : {e}")
+
+
+def benchmark_approximation_quality_with_dn(
+    directory_path,
+    approx_methods_list,
+    timeout_seconds,
+    output_filename,
+):
+
+    benchmark_start_time = time.perf_counter()
+
+    if not os.path.isdir(directory_path):
+        print(f"Error : Folder '{directory_path}' does not exist.")
+        return
+
+    files_to_process = [f for f in os.listdir(directory_path) if f.endswith(".npz")]
+    if not files_to_process:
+        print(f"No file to process has been found in folder '{directory_path}'.")
+        return
+
+    try:
+        with open(output_filename, "w", encoding="utf-8") as f_out:
+            f_out.write("=" * 100 + "\n")
+            f_out.write(f"APPROXIMATION QUALITY BENCHMARK\n")
+            f_out.write(f"Date: {time.ctime()}\n")
+            f_out.write(f"Timeout per graph: {timeout_seconds}s\n")
+            f_out.write("=" * 100 + "\n\n")
+
+            for filename in files_to_process:
+                file_header_line = f"Treating: {filename}"
+                file_separator = "=" * 100
+                f_out.write(f"{file_separator}\n")
+                f_out.write(f"{file_header_line}\n")
+                f_out.write(f"{file_separator}\n\n")
+                filepath = os.path.join(directory_path, filename)
+
+                try:
+                    graphs_in_file = parse_npz_file(filepath, has_dn=True)
+                    total_graphs = len(graphs_in_file)
+                    if total_graphs == 0:
+                        continue
+                    f_out.write(f"  File loaded: {total_graphs} graphs.\n")
+                except Exception as e:
+                    print(f"Error loading graphs from '{filename}': {e}")
+                    continue
+
+                ratios_results = {m.__name__: [] for m in approx_methods_list}
+                meta_stats = {
+                    m.__name__: {"timeouts": 0, "errors": 0, "success": 0}
+                    for m in approx_methods_list
+                }
+                skipped_graphs_exact_fail = 0
+
+                for i, graph in enumerate(graphs_in_file):
+                    k_opt = graph.graph.get("decycling_number")
+
+                    for method in approx_methods_list:
+                        method_name = method.__name__
+                        best_k_approx = float("inf")
+                        valid_run_found = False
+                        timeout_occurred = False
+                        error_occurred = False
+
+                        for _ in range(3):
+                            approx_queue = multiprocessing.Queue()
+                            p_approx = multiprocessing.Process(
+                                target=run_method_get_result,
+                                args=(method, graph, approx_queue),
+                            )
+                            p_approx.start()
+                            p_approx.join(timeout=timeout_seconds)
+
+                            if p_approx.is_alive():
+                                p_approx.terminate()
+                                p_approx.join()
+                                timeout_occurred = True
+                            elif p_approx.exitcode != 0:
+                                error_occurred = True
+                            else:
+                                try:
+                                    res_approx = approx_queue.get_nowait()
+                                    if isinstance(res_approx, Exception):
+                                        error_occurred = True
+                                    else:
+                                        valid_run_found = True
+                                        if res_approx < best_k_approx:
+                                            best_k_approx = res_approx
+                                except QueueEmpty:
+                                    error_occurred = True
+
+                        if valid_run_found:
+                            meta_stats[method_name]["success"] += 1
+                            if k_opt == 0:
+                                ratio = 1.0 if best_k_approx == 0 else 999.0
+                            else:
+                                ratio = best_k_approx / k_opt
+
+                            ratios_results[method_name].append(ratio)
+
+                        else:
+                            if timeout_occurred:
+                                meta_stats[method_name]["timeouts"] += 1
+                            else:
+                                meta_stats[method_name]["errors"] += 1
+
+                if skipped_graphs_exact_fail > 0:
+                    print(
+                        f"  WARNING: {skipped_graphs_exact_fail} graphs skipped because Exact Method failed/timeout."
+                    )
+                    f_out.write(
+                        f"  WARNING: {skipped_graphs_exact_fail} graphs skipped because Exact Method failed/timeout.\n"
+                    )
+
+                f_out.write("\n Finished tests. See results.\n\n")
+
+                col_methode = max(len(m.__name__) for m in approx_methods_list) + 2
+                col_methode = max(col_methode, 15)
+                col_val = 14
+                col_pct = 12
+                col_exact = 10
+
+                table_header = (
+                    f"| {'Method':<{col_methode}} "
+                    f"| {'Exact Matches':>{col_exact}} "
+                    f"| {'Min Ratio':>{col_val}} "
+                    f"| {'Max Ratio':>{col_val}} "
+                    f"| {'Mean Ratio':>{col_val}} "
+                    f"| {'Median Ratio':>{col_val}} "
+                    f"| {'Success (%)':>{col_pct}} "
+                    f"| {'Timeout (%)':>{col_pct}} |"
+                )
+
+                table_separator = (
+                    f"|{'-' * (col_methode + 1)}"
+                    f"|{'-' * (col_exact + 1)}"
+                    f"|{'-' * (col_val + 1)}"
+                    f"|{'-' * (col_val + 1)}"
+                    f"|{'-' * (col_val + 1)}"
+                    f"|{'-' * (col_pct + 1)}"
+                    f"|{'-' * (col_pct + 1)}|"
+                )
+
+                f_out.write(table_header + "\n")
+                f_out.write(table_separator + "\n")
+
+                effective_total = total_graphs - skipped_graphs_exact_fail
+                if effective_total <= 0:
+                    effective_total = 1
+
+                for method_name, ratios_list in ratios_results.items():
+                    ratios_arr = np.array(ratios_list)
+                    stats = meta_stats[method_name]
+                    success_pct = (stats["success"] / effective_total) * 100
+                    timeout_pct = (stats["timeouts"] / effective_total) * 100
+
+                    if len(ratios_arr) > 0:
+                        r_min = f"{np.min(ratios_arr):.4f}"
+                        r_max = f"{np.max(ratios_arr):.4f}"
+                        r_mean = f"{np.mean(ratios_arr):.4f}"
+                        r_median = f"{np.median(ratios_arr):.4f}"
+                        r_exact_matches = np.sum(ratios_arr == 1.0)
+                    else:
+                        r_mean = r_median = r_max = r_min = r_exact_matches = "---"
+
+                    row_data = (
+                        f"| {method_name:<{col_methode}} "
+                        f"| {r_exact_matches:>{col_exact}} "
+                        f"| {r_min:>{col_val}} "
+                        f"| {r_max:>{col_val}} "
+                        f"| {r_mean:>{col_val}} "
+                        f"| {r_median:>{col_val}} "
+                        f"| {success_pct:>{col_pct - 3}.2f} % "
+                        f"| {timeout_pct:>{col_pct - 3}.2f} % |"
+                    )
+
+                    f_out.write(row_data + "\n")
+
+                f_out.write("\n")
+
+            benchmark_end_time = time.perf_counter()
+            total_seconds = benchmark_end_time - benchmark_start_time
+            formatted_time = str(datetime.timedelta(seconds=total_seconds))
+            end_msg = (
+                f"\n{file_separator}\n"
+                f"Quality Benchmark over. Results in '{output_filename}'.\n"
+                f"Total execution time: {formatted_time}\n"
+                f"{file_separator}"
+            )
+            f_out.write(end_msg + "\n")
+
+    except IOError as e:
+        print(f"Error: Impossible to write in '{output_filename}': {e}")
+    except Exception as e:
+        print(f"Error global : {e}")
+
+
+def benchmark_approx_comparison(
+    directory_path,
+    methods_list,
+    timeout_seconds,
+    output_filename="benchmark_comparison_results.txt",
+):
+    benchmark_start_time = time.perf_counter()
+
+    if not os.path.isdir(directory_path):
+        print(f"Error : Folder '{directory_path}' does not exist.")
+        return
+
+    files_to_process = [f for f in os.listdir(directory_path) if f.endswith(".npz")]
+
+    if not files_to_process:
+        print(f"No file to process has been found in folder '{directory_path}'.")
+        return
+
+    try:
+        with open(output_filename, "w", encoding="utf-8") as f_out:
+
+            f_out.write("=" * 100 + "\n")
+            f_out.write(f"APPROXIMATION COMPARISON & RANKING\n")
+            f_out.write(f"Date: {time.ctime()}\n")
+            f_out.write(
+                f"Ranking logic: Based on frequency of finding the MINIMUM result among competitors.\n"
+            )
+            f_out.write(f"Timeout per graph: {timeout_seconds}s\n")
+            f_out.write("=" * 100 + "\n\n")
+
+            for filename in files_to_process:
+                file_header_line = f"Treating: {filename}"
+                file_separator = "=" * 100
+
+                print(f"\n{file_separator}")
+                print(file_header_line)
+                print(f"{file_separator}")
+
+                f_out.write(f"{file_separator}\n")
+                f_out.write(f"{file_header_line}\n")
+                f_out.write(f"{file_separator}\n\n")
+
+                filepath = os.path.join(directory_path, filename)
+
+                try:
+                    graphs_in_file = parse_npz_file(filepath)
+                    total_graphs = len(graphs_in_file)
+                    if total_graphs == 0:
+                        continue
+                    msg = f"  File loaded: {total_graphs} graphs."
+                    print(msg)
+                    f_out.write(msg + "\n")
+                except Exception as e:
+                    print(f"Error loading graphs from '{filename}': {e}")
+                    continue
+
+                # Structure de données pour les stats
+                # wins = nombre de fois où l'algo a trouvé la meilleure solution (ou égalité)
+                stats = {
+                    m.__name__: {
+                        "times": [],
+                        "results": [],  # On stocke les k trouvés pour info
+                        "wins": 0,
+                        "timeouts": 0,
+                        "errors": 0,
+                    }
+                    for m in methods_list
+                }
+
+                for i, graph in enumerate(graphs_in_file):
+                    print(f"  Competing... Graph {i + 1}/{total_graphs}", end="\r")
+
+                    # Stocke les résultats de CE graphe pour comparaison immédiate
+                    # method_name -> best_k_for_this_graph
+                    current_graph_results = {}
+
+                    for method in methods_list:
+                        method_name = method.__name__
+
+                        best_run_k = float("inf")
+                        best_run_time = 0
+
+                        run_valid = False
+                        timeout_occurred = False
+                        error_occurred = False
+
+                        # 3 Runs par algo, on garde le meilleur résultat (min k)
+                        for _ in range(3):
+                            q = multiprocessing.Queue()
+                            p = multiprocessing.Process(
+                                target=run_approx_method_get_result_and_time,
+                                args=(method, graph, q),
+                            )
+                            p.start()
+                            p.join(timeout=timeout_seconds)
+
+                            if p.is_alive():
+                                p.terminate()
+                                p.join()
+                                timeout_occurred = True
+                            elif p.exitcode != 0:
+                                error_occurred = True
+                            else:
+                                try:
+                                    res = q.get_nowait()
+                                    if isinstance(res, Exception):
+                                        error_occurred = True
+                                    else:
+                                        # res est un tuple (k, time)
+                                        k_val, t_val = res
+
+                                        # Logique: On veut minimiser k.
+                                        # Si k est égal, on ne change rien (ou on pourrait prendre le meilleur temps)
+                                        if k_val < best_run_k:
+                                            best_run_k = k_val
+                                            best_run_time = t_val
+                                            run_valid = True
+                                        elif k_val == best_run_k:
+                                            # Optionnel: Si k égal, on garde le run le plus rapide ?
+                                            # Pour l'instant on garde le premier trouvé ou on moyenne
+                                            pass
+
+                                except QueueEmpty:
+                                    error_occurred = True
+
+                        if run_valid:
+                            stats[method_name]["times"].append(best_run_time)
+                            stats[method_name]["results"].append(best_run_k)
+                            current_graph_results[method_name] = best_run_k
+                        else:
+                            if timeout_occurred:
+                                stats[method_name]["timeouts"] += 1
+                            else:
+                                stats[method_name]["errors"] += 1
+
+                    # --- COMPARAISON DU GRAPHE ---
+                    # Quel est le min k trouvé parmi tous les algos qui ont réussi ?
+                    if current_graph_results:
+                        min_k_global = min(current_graph_results.values())
+
+                        # On donne un "point" à tous ceux qui ont trouvé ce min
+                        for m_name, k_val in current_graph_results.items():
+                            if k_val == min_k_global:
+                                stats[m_name]["wins"] += 1
+
+                print(f"\n  Finished competition for {filename}.\n")
+                f_out.write("\n  Results table (Sorted by Best Solution Rate):\n\n")
+
+                # Préparation du tableau
+                col_methode = max(len(m.__name__) for m in methods_list) + 2
+                col_methode = max(col_methode, 15)
+                col_time = 12
+                col_pct = 14
+
+                table_header = (
+                    f"| {'Method':<{col_methode}} "
+                    f"| {'Best Sol %':>{col_pct}} "  # Pourcentage de "Wins"
+                    f"| {'Mean Time (s)':>{col_pct}} "
+                    f"| {'Median Time (s)':>{col_pct}} "
+                    f"| {'Success (%)':>{col_time}} |"
+                )
+                table_separator = (
+                    f"|{'-' * (col_methode + 1)}"
+                    f"|{'-' * (col_pct + 1)}"
+                    f"|{'-' * (col_pct + 1)}"
+                    f"|{'-' * (col_pct + 1)}"
+                    f"|{'-' * (col_time + 1)}|"
+                )
+
+                # Calcul des données finales pour le tableau
+                rows = []
+                for method_name, data in stats.items():
+                    num_success = len(data["times"])
+                    success_pct = (num_success / total_graphs) * 100
+
+                    # Le "Best Solution %" est basé sur le nombre total de graphes
+                    # C'est le taux de "Victoire"
+                    win_pct = (data["wins"] / total_graphs) * 100
+
+                    times_arr = np.array(data["times"])
+                    if num_success > 0:
+                        s_mean = np.mean(times_arr)
+                        s_median = np.median(times_arr)
+                    else:
+                        s_mean = float("inf")  # Pour le tri, les échecs vont à la fin
+                        s_median = float("inf")
+
+                    row_obj = {
+                        "name": method_name,
+                        "win_pct": win_pct,
+                        "mean_time": s_mean,
+                        "median_time": s_median,
+                        "success_pct": success_pct,
+                    }
+                    rows.append(row_obj)
+
+                # --- TRI DES RÉSULTATS ---
+                # Critère 1: Taux de victoire (Descendant)
+                # Critère 2: Temps moyen (Ascendant) - en cas d'égalité de score
+                rows.sort(key=lambda x: (-x["win_pct"], x["mean_time"]))
+
+                print(table_header)
+                print(table_separator)
+                f_out.write(table_header + "\n")
+                f_out.write(table_separator + "\n")
+
+                for row in rows:
+                    mean_str = (
+                        f"{row['mean_time']:.6f}"
+                        if row["mean_time"] != float("inf")
+                        else "---"
+                    )
+                    med_str = (
+                        f"{row['median_time']:.6f}"
+                        if row["median_time"] != float("inf")
+                        else "---"
+                    )
+
+                    line = (
+                        f"| {row['name']:<{col_methode}} "
+                        f"| {row['win_pct']:>{col_pct - 3}.2f} % "
+                        f"| {mean_str:>{col_pct}} "
+                        f"| {med_str:>{col_pct}} "
+                        f"| {row['success_pct']:>{col_time - 3}.2f} % |"
+                    )
+                    print(line)
+                    f_out.write(line + "\n")
+
+                f_out.write("\n")
+
+            benchmark_end_time = time.perf_counter()
+            total_seconds = benchmark_end_time - benchmark_start_time
+            formatted_time = str(datetime.timedelta(seconds=total_seconds))
+
+            end_msg = (
+                f"\n{file_separator}\n"
+                f"Comparison Benchmark over. Results in '{output_filename}'.\n"
+                f"Total execution time: {formatted_time}\n"
+                f"{file_separator}"
+            )
+            print(end_msg)
+            f_out.write(end_msg + "\n")
+
+    except IOError as e:
+        print(f"Error: Impossible to write in '{output_filename}': {e}")
+    except Exception as e:
+        print(f"Error global : {e}")
 
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()
     TIMEOUT_MAX = 600
 
-    METHODS = [
-        get_decycling_number_mif,
-        get_decycling_number_mif_v2,
-        get_decycling_number_mif_v3,
+    EXACT_METHODS = [
+        get_decycling_number_razgon,
+        get_decycling_number_fomin,
+        get_decycling_number_xiao,
     ]
 
-    # benchmark_graph_methods(
-    #     directory_path="Benchmark graphs/diameter",
-    #     methods_list=METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="benchmark_results_diameter.txt",
-    # )
-    #
-    # benchmark_graph_methods(
-    #     directory_path="Benchmark graphs/chromatic number",
-    #     methods_list=METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="benchmark_results_chrom_number.txt",
-    # )
-    #
-    # benchmark_graph_methods(
-    #     directory_path="Benchmark graphs/density",
-    #     methods_list=METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="benchmark_results_density.txt",
-    # )
+    APPROX_METHODS = [
+        approx_decycling_number_bafna,
+        approx_decycling_number_bar_yehuda,
+        approx_decycling_number_stanojevic,
+    ]
 
-    benchmark_graph_methods(
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/random graphs density",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="ben_random_density.txt",
+    )
+
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/density",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="ben_density.txt",
+    )
+
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/chromatic number",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="ben_chromatic_number.txt",
+    )
+
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/diameter",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="ben_diameter.txt",
+    )
+
+    benchmark_exact_exec_time(
         directory_path="Benchmark graphs/domination number",
-        methods_list=METHODS,
+        methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="benchmark_results_domination_number.txt",
+        output_filename="ben_domination_number.txt",
     )
 
-    benchmark_graph_methods(
+    benchmark_exact_exec_time(
         directory_path="Benchmark graphs/girth",
-        methods_list=METHODS,
+        methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="benchmark_results_girth.txt",
+        output_filename="ben_girth.txt",
     )
 
-    benchmark_graph_methods(
+    benchmark_exact_exec_time(
         directory_path="Benchmark graphs/longest induced cycle",
-        methods_list=METHODS,
+        methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="benchmark_results_long_ind_cyc.txt",
+        output_filename="ben_long_ind_cyc.txt",
     )
 
-    benchmark_graph_methods(
+    benchmark_exact_exec_time(
         directory_path="Benchmark graphs/radius",
-        methods_list=METHODS,
+        methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="benchmark_results_radius.txt",
+        output_filename="ben_radius.txt",
     )
 
-    benchmark_graph_methods(
+    benchmark_exact_exec_time(
         directory_path="Benchmark graphs/treewidth",
-        methods_list=METHODS,
+        methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="benchmark_results_treewidth.txt",
+        output_filename="ben_treewidth.txt",
     )
 
-    benchmark_graph_methods(
+    benchmark_exact_exec_time(
         directory_path="Benchmark graphs/vertex connectivity",
-        methods_list=METHODS,
+        methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="benchmark_results_vertex_con.txt",
+        output_filename="ben_vert_conn.txt",
     )
 
-# graphs = parse_adj_matrices("Benchmark graphs/equal_to_1.mat")
-# for graph in graphs:
-#     print("Decycling number (naive):", get_decycling_number(graph))
-#     print("Decycling number (MIF):", get_decycling_number_mif(graph))
-#     print("Decycling number (MIF v2):", get_decycling_number_mif_v2(graph))
-#     print("Decycling number (MIF v3):", get_decycling_number_mif_v3(graph))
-#     print("-----")
+    benchmark_approximation_quality(
+        directory_path="Benchmark graphs/random graphs density",
+        approx_methods_list=APPROX_METHODS,
+        exact_method_func=get_decycling_number_xiao,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="ben_approx_random_density.txt",
+    )
 
-# nt = nx.erdos_renyi_graph(900, 0.9)
-# Densité faible -> plus lent
-# print(get_decycling_number_constr_heur(nt))
+    benchmark_approximation_quality(
+        directory_path="Benchmark graphs/density",
+        approx_methods_list=APPROX_METHODS,
+        exact_method_func=get_decycling_number_xiao,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="ben_approx_density.txt",
+    )
 
-# nt = nx.Graph()
-# nt.add_nodes_from(["V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"])
-# nt.add_edges_from(
-#     [
-#         ("V1", "V2"),
-#         ("V1", "V3"),
-#         ("V2", "V4"),
-#         ("V4", "V5"),
-#         ("V3", "V5"),
-#         ("V4", "V6"),
-#         ("V6", "V7"),
-#         ("V5", "V7"),
-#         ("V7", "V8"),
-#         ("V6", "V8"),
-#     ]
-# )
+    benchmark_approximation_quality_with_dn(
+        directory_path="Benchmark graphs/more vertices with dn",
+        approx_methods_list=APPROX_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="ben_approx_more_v_dn.txt",
+    )
 
-# print(get_decycling_number(nt))
-# print(get_decycling_number_mif(nt))
-# print(get_decycling_number_mif_v2(nt))
-# print(get_decycling_number_mif_v3(nt))
-
-# graph = Network()
-# graph.inherit_edge_colors(False)
-# graph.options.edges.smooth.enabled = False
-# graph.from_nx(nt)
-# graph.get_node("V6")["color"] = "green"
-#
-# graph.show("graph.html", notebook=False)
+    benchmark_approx_comparison(
+        directory_path="Benchmark graphs/random big",
+        methods_list=APPROX_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="ben_approx_random_big.txt",
+    )
