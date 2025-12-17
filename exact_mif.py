@@ -173,5 +173,5 @@ def get_mif_len(G, K):
         )
 
 
-def get_decycling_number_mif(G):
+def get_decycling_number_razgon(G):
     return len(set(G.nodes)) - get_mif_len(G, set())

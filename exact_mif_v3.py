@@ -294,7 +294,7 @@ def get_mif_len(G, F, active_v):
         return len(S) + main_procedure(new_G, new_F, active_v)
 
 
-def get_decycling_number_mif_v3(G):
+def get_decycling_number_xiao(G):
     if nx.is_forest(G):
         return 0
 

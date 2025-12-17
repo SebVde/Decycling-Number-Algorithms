@@ -16,5 +16,5 @@ def naive_fvs(graph):
     return None
 
 
-def get_decycling_number(graph):
+def get_decycling_number_naive(graph):
     return len(naive_fvs(graph))

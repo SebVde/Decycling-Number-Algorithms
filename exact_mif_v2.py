@@ -1,9 +1,5 @@
-import io
-
 import networkx as nx
 import itertools
-
-import numpy as np
 
 
 def sort_nodes(node):
@@ -288,35 +284,8 @@ def main_procedure(G, F, active_v):
         return Exception("No suitable v found")
 
 
-def get_decycling_number_mif_v2(G):
+def get_decycling_number_fomin(G):
     if nx.is_forest(G):
         return 0
 
     return len(G.nodes) - get_mif_len(G, set(), None)
-
-
-# if __name__ == "__main__":
-#     block = """0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 1 0 1 1
-# 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 1 1 1
-# 0 0 0 0 0 0 0 1 0 1 1 1 0 0 0 0 1 0 0 1
-# 0 0 0 0 0 0 1 0 1 0 1 1 0 0 0 0 0 1 1 0
-# 0 0 0 0 0 1 1 0 0 0 1 0 1 0 0 0 1 0 1 0
-# 0 0 0 0 1 0 0 1 0 0 0 1 0 1 0 0 0 1 0 1
-# 0 0 0 1 1 0 0 1 0 0 0 0 0 1 1 0 0 0 0 1
-# 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 0 0 1 0
-# 0 0 0 1 0 0 0 0 0 1 0 0 1 0 0 1 1 0 0 1
-# 0 0 1 0 0 0 0 0 1 0 0 0 0 1 1 0 0 1 1 0
-# 0 0 1 1 1 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0
-# 0 0 1 1 0 1 0 0 0 0 0 0 1 0 1 1 0 0 0 0
-# 0 1 0 0 1 0 0 1 1 0 0 1 0 1 0 0 0 0 0 0
-# 1 0 0 0 0 1 1 0 0 1 1 0 1 0 0 0 0 0 0 0
-# 0 1 0 0 0 0 1 0 0 1 1 1 0 0 0 0 1 0 0 0
-# 1 0 0 0 0 0 0 1 1 0 1 1 0 0 0 0 0 1 0 0
-# 1 0 1 0 1 0 0 0 1 0 0 0 0 0 1 0 0 1 0 0
-# 0 1 0 1 0 1 0 0 0 1 0 0 0 0 0 1 1 0 0 0
-# 1 1 0 1 1 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0
-# 1 1 1 0 0 1 1 0 1 0 0 0 0 0 0 0 0 0 0 0"""
-#
-#     np_matrix = np.loadtxt(io.StringIO(block), dtype=int)
-#     G = nx.from_numpy_array(np_matrix)
-#     print(get_decycling_number_mif_v2(G))

@@ -17,5 +17,5 @@ def find_min_fvs(G):
     return fvs
 
 
-def get_decycling_number_constr_heur(G):
+def approx_decycling_number_stanojevic(G):
     return len(find_min_fvs(G.copy()))
