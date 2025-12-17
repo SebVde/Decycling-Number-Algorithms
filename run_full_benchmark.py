@@ -950,70 +950,70 @@ if __name__ == "__main__":
         directory_path="Benchmark graphs/random graphs density",
         methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="ben_random_density.txt",
+        output_filename="Benchmark results/final_ben_random_density.txt",
     )
 
     benchmark_exact_exec_time(
         directory_path="Benchmark graphs/density",
         methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="ben_density.txt",
+        output_filename="Benchmark results/final_ben_density.txt",
     )
 
     benchmark_exact_exec_time(
         directory_path="Benchmark graphs/chromatic number",
         methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="ben_chromatic_number.txt",
+        output_filename="Benchmark results/final_ben_chromatic_number.txt",
     )
 
     benchmark_exact_exec_time(
         directory_path="Benchmark graphs/diameter",
         methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="ben_diameter.txt",
+        output_filename="Benchmark results/final_ben_diameter.txt",
     )
 
     benchmark_exact_exec_time(
         directory_path="Benchmark graphs/domination number",
         methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="ben_domination_number.txt",
+        output_filename="Benchmark results/final_ben_domination_number.txt",
     )
 
     benchmark_exact_exec_time(
         directory_path="Benchmark graphs/girth",
         methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="ben_girth.txt",
+        output_filename="Benchmark results/final_ben_girth.txt",
     )
 
     benchmark_exact_exec_time(
         directory_path="Benchmark graphs/longest induced cycle",
         methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="ben_long_ind_cyc.txt",
+        output_filename="Benchmark results/final_ben_long_ind_cyc.txt",
     )
 
     benchmark_exact_exec_time(
         directory_path="Benchmark graphs/radius",
         methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="ben_radius.txt",
+        output_filename="Benchmark results/final_ben_radius.txt",
     )
 
     benchmark_exact_exec_time(
         directory_path="Benchmark graphs/treewidth",
         methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="ben_treewidth.txt",
+        output_filename="Benchmark results/final_ben_treewidth.txt",
     )
 
     benchmark_exact_exec_time(
         directory_path="Benchmark graphs/vertex connectivity",
         methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="ben_vert_conn.txt",
+        output_filename="Benchmark results/final_ben_vert_conn.txt",
     )
 
     benchmark_approximation_quality(
@@ -1021,7 +1021,7 @@ if __name__ == "__main__":
         approx_methods_list=APPROX_METHODS,
         exact_method_func=get_decycling_number_xiao,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="ben_approx_random_density.txt",
+        output_filename="Benchmark results/final_ben_approx_random_density.txt",
     )
 
     benchmark_approximation_quality(
@@ -1029,19 +1029,19 @@ if __name__ == "__main__":
         approx_methods_list=APPROX_METHODS,
         exact_method_func=get_decycling_number_xiao,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="ben_approx_density.txt",
+        output_filename="Benchmark results/final_ben_approx_density.txt",
     )
 
     benchmark_approximation_quality_with_dn(
         directory_path="Benchmark graphs/more vertices with dn",
         approx_methods_list=APPROX_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="ben_approx_more_v_dn.txt",
+        output_filename="Benchmark results/final_ben_approx_more_v_dn.txt",
     )
 
     benchmark_approx_comparison(
         directory_path="Benchmark graphs/random big",
         methods_list=APPROX_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="ben_approx_random_big.txt",
+        output_filename="Benchmark results/final_ben_approx_random_big.txt",
     )
