@@ -1,6 +1,6 @@
 ====================================================================================================
 APPROXIMATION COMPARISON & RANKING
-Date: Tue Dec 16 01:03:41 2025
+Date: Thu Dec 18 21:48:39 2025
 Ranking logic: Based on frequency of finding the MINIMUM result among competitors.
 Timeout per graph: 600s
 ====================================================================================================
@@ -15,9 +15,9 @@ Treating: V_1000_D_20.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |       85.00 % |       1.852932 |       1.858352 |    100.00 % |
-| approx_decycling_number_stanojevic   |       25.00 % |       0.254355 |       0.252139 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       0.395737 |       0.394768 |    100.00 % |
+| approx_decycling_number_bafna        |       85.00 % |       1.853324 |       1.851568 |    100.00 % |
+| approx_decycling_number_stanojevic   |       25.00 % |       0.238262 |       0.233781 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       0.376546 |       0.376180 |    100.00 % |
 
 ====================================================================================================
 Treating: V_1000_D_40.npz
@@ -29,9 +29,9 @@ Treating: V_1000_D_40.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |       95.00 % |       2.138636 |       2.115082 |    100.00 % |
-| approx_decycling_number_stanojevic   |       15.00 % |       0.420322 |       0.418977 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       0.563765 |       0.561010 |    100.00 % |
+| approx_decycling_number_bafna        |       95.00 % |       2.164310 |       2.090360 |    100.00 % |
+| approx_decycling_number_stanojevic   |       15.00 % |       0.391207 |       0.390456 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       0.539181 |       0.534687 |    100.00 % |
 
 ====================================================================================================
 Treating: V_1000_D_60.npz
@@ -43,9 +43,9 @@ Treating: V_1000_D_60.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |       95.00 % |       2.432184 |       2.426713 |    100.00 % |
-| approx_decycling_number_stanojevic   |       30.00 % |       0.577722 |       0.575998 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       0.748471 |       0.747626 |    100.00 % |
+| approx_decycling_number_bafna        |       95.00 % |       2.411431 |       2.388548 |    100.00 % |
+| approx_decycling_number_stanojevic   |       30.00 % |       0.555086 |       0.546062 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       0.745057 |       0.711327 |    100.00 % |
 
 ====================================================================================================
 Treating: V_1000_D_80.npz
@@ -57,9 +57,9 @@ Treating: V_1000_D_80.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |       95.00 % |       2.725765 |       2.723449 |    100.00 % |
-| approx_decycling_number_stanojevic   |       45.00 % |       0.748174 |       0.747852 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       0.978176 |       0.977038 |    100.00 % |
+| approx_decycling_number_bafna        |       95.00 % |       2.740646 |       2.668837 |    100.00 % |
+| approx_decycling_number_stanojevic   |       45.00 % |       0.710530 |       0.709318 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       0.940976 |       0.937278 |    100.00 % |
 
 ====================================================================================================
 Treating: V_1500_D_20.npz
@@ -71,9 +71,9 @@ Treating: V_1500_D_20.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |      100.00 % |       4.199956 |       4.203915 |    100.00 % |
-| approx_decycling_number_stanojevic   |       15.00 % |       0.526402 |       0.527637 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       0.910956 |       0.929327 |    100.00 % |
+| approx_decycling_number_bafna        |      100.00 % |       4.284976 |       4.210902 |    100.00 % |
+| approx_decycling_number_stanojevic   |       15.00 % |       0.518023 |       0.502143 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       0.900802 |       0.909519 |    100.00 % |
 
 ====================================================================================================
 Treating: V_1500_D_40.npz
@@ -85,9 +85,9 @@ Treating: V_1500_D_40.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |       90.00 % |       4.997775 |       4.973159 |    100.00 % |
-| approx_decycling_number_stanojevic   |       20.00 % |       0.933873 |       0.931580 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       1.238006 |       1.237021 |    100.00 % |
+| approx_decycling_number_bafna        |       90.00 % |       5.079146 |       4.944604 |    100.00 % |
+| approx_decycling_number_stanojevic   |       20.00 % |       0.896912 |       0.894303 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       1.190961 |       1.186157 |    100.00 % |
 
 ====================================================================================================
 Treating: V_1500_D_60.npz
@@ -99,9 +99,9 @@ Treating: V_1500_D_60.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |       85.00 % |       5.616079 |       5.635670 |    100.00 % |
-| approx_decycling_number_stanojevic   |       25.00 % |       1.313966 |       1.311128 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       1.699271 |       1.695629 |    100.00 % |
+| approx_decycling_number_bafna        |       85.00 % |       5.651797 |       5.575163 |    100.00 % |
+| approx_decycling_number_stanojevic   |       25.00 % |       1.251991 |       1.246877 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       1.674520 |       1.632120 |    100.00 % |
 
 ====================================================================================================
 Treating: V_1500_D_80.npz
@@ -113,9 +113,9 @@ Treating: V_1500_D_80.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |      100.00 % |       6.250189 |       6.256897 |    100.00 % |
-| approx_decycling_number_stanojevic   |       15.00 % |       1.686946 |       1.680915 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       2.218824 |       2.217451 |    100.00 % |
+| approx_decycling_number_bafna        |      100.00 % |       6.292003 |       6.189616 |    100.00 % |
+| approx_decycling_number_stanojevic   |       15.00 % |       1.648021 |       1.613941 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       2.176504 |       2.136918 |    100.00 % |
 
 ====================================================================================================
 Treating: V_2000_D_20.npz
@@ -127,9 +127,9 @@ Treating: V_2000_D_20.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |       95.00 % |       7.600879 |       7.595779 |    100.00 % |
-| approx_decycling_number_stanojevic   |       15.00 % |       0.942220 |       0.943869 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       1.676255 |       1.660183 |    100.00 % |
+| approx_decycling_number_bafna        |       95.00 % |       7.651531 |       7.546136 |    100.00 % |
+| approx_decycling_number_stanojevic   |       15.00 % |       0.943810 |       0.896789 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       1.706089 |       1.672432 |    100.00 % |
 
 ====================================================================================================
 Treating: V_2000_D_40.npz
@@ -141,9 +141,9 @@ Treating: V_2000_D_40.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |      100.00 % |       9.274493 |       8.999623 |    100.00 % |
-| approx_decycling_number_stanojevic   |        0.00 % |       1.652608 |       1.646298 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       2.182613 |       2.180266 |    100.00 % |
+| approx_decycling_number_bafna        |      100.00 % |       9.103996 |       9.005381 |    100.00 % |
+| approx_decycling_number_stanojevic   |        0.00 % |       1.587598 |       1.565746 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       2.160632 |       2.101244 |    100.00 % |
 
 ====================================================================================================
 Treating: V_2000_D_60.npz
@@ -155,9 +155,9 @@ Treating: V_2000_D_60.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |       95.00 % |      10.179473 |      10.152234 |    100.00 % |
-| approx_decycling_number_stanojevic   |       25.00 % |       2.345543 |       2.339213 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       3.058805 |       3.028062 |    100.00 % |
+| approx_decycling_number_bafna        |       95.00 % |      10.017776 |      10.013700 |    100.00 % |
+| approx_decycling_number_stanojevic   |       25.00 % |       2.308063 |       2.231372 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       2.895723 |       2.896435 |    100.00 % |
 
 ====================================================================================================
 Treating: V_2000_D_80.npz
@@ -169,9 +169,9 @@ Treating: V_2000_D_80.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |      100.00 % |      11.512865 |      11.522955 |    100.00 % |
-| approx_decycling_number_stanojevic   |       15.00 % |       3.060241 |       3.046768 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       4.046114 |       4.047831 |    100.00 % |
+| approx_decycling_number_bafna        |      100.00 % |      11.570688 |      11.574006 |    100.00 % |
+| approx_decycling_number_stanojevic   |       15.00 % |       2.970684 |       2.903204 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       3.959788 |       3.876430 |    100.00 % |
 
 ====================================================================================================
 Treating: V_2500_D_20.npz
@@ -183,9 +183,9 @@ Treating: V_2500_D_20.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |       95.00 % |      12.283266 |      12.278046 |    100.00 % |
-| approx_decycling_number_stanojevic   |        5.00 % |       1.452309 |       1.449442 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       2.602300 |       2.514185 |    100.00 % |
+| approx_decycling_number_bafna        |       95.00 % |      12.396541 |      12.268185 |    100.00 % |
+| approx_decycling_number_stanojevic   |        5.00 % |       1.438003 |       1.386338 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       2.470446 |       2.466894 |    100.00 % |
 
 ====================================================================================================
 Treating: V_2500_D_40.npz
@@ -197,9 +197,9 @@ Treating: V_2500_D_40.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |       95.00 % |      14.538758 |      14.492445 |    100.00 % |
-| approx_decycling_number_stanojevic   |       15.00 % |       2.696657 |       2.628001 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       3.474879 |       3.461333 |    100.00 % |
+| approx_decycling_number_bafna        |       95.00 % |      14.559190 |      14.462227 |    100.00 % |
+| approx_decycling_number_stanojevic   |       15.00 % |       2.589576 |       2.517202 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       3.379602 |       3.328568 |    100.00 % |
 
 ====================================================================================================
 Treating: V_2500_D_60.npz
@@ -211,9 +211,9 @@ Treating: V_2500_D_60.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |       90.00 % |      16.608732 |      16.550800 |    100.00 % |
-| approx_decycling_number_stanojevic   |       20.00 % |       3.729814 |       3.728503 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       4.887075 |       4.880564 |    100.00 % |
+| approx_decycling_number_bafna        |       90.00 % |      16.412449 |      16.386889 |    100.00 % |
+| approx_decycling_number_stanojevic   |       20.00 % |       3.625580 |       3.566464 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       4.718984 |       4.674416 |    100.00 % |
 
 ====================================================================================================
 Treating: V_2500_D_80.npz
@@ -225,9 +225,9 @@ Treating: V_2500_D_80.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |      100.00 % |      18.499093 |      18.383494 |    100.00 % |
-| approx_decycling_number_stanojevic   |       15.00 % |       4.806009 |       4.795936 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       6.436505 |       6.410031 |    100.00 % |
+| approx_decycling_number_bafna        |      100.00 % |      18.595183 |      18.593522 |    100.00 % |
+| approx_decycling_number_stanojevic   |       15.00 % |       4.613689 |       4.588453 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       6.305552 |       6.190038 |    100.00 % |
 
 ====================================================================================================
 Treating: V_500_D_20.npz
@@ -239,9 +239,9 @@ Treating: V_500_D_20.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_stanojevic   |       80.00 % |       0.061867 |       0.062165 |    100.00 % |
-| approx_decycling_number_bafna        |       35.00 % |       0.465319 |       0.465636 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       0.081444 |       0.081199 |    100.00 % |
+| approx_decycling_number_stanojevic   |       80.00 % |       0.069165 |       0.069046 |    100.00 % |
+| approx_decycling_number_bafna        |       35.00 % |       0.475283 |       0.456517 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       0.090014 |       0.087928 |    100.00 % |
 
 ====================================================================================================
 Treating: V_500_D_40.npz
@@ -253,9 +253,9 @@ Treating: V_500_D_40.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |       75.00 % |       0.511963 |       0.511475 |    100.00 % |
-| approx_decycling_number_stanojevic   |       45.00 % |       0.115817 |       0.115316 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       0.154423 |       0.152960 |    100.00 % |
+| approx_decycling_number_bafna        |       75.00 % |       0.510607 |       0.499040 |    100.00 % |
+| approx_decycling_number_stanojevic   |       45.00 % |       0.106216 |       0.103086 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       0.148095 |       0.138255 |    100.00 % |
 
 ====================================================================================================
 Treating: V_500_D_60.npz
@@ -267,9 +267,9 @@ Treating: V_500_D_60.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |       75.00 % |       0.573475 |       0.575676 |    100.00 % |
-| approx_decycling_number_stanojevic   |       45.00 % |       0.152001 |       0.152315 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       0.193546 |       0.193988 |    100.00 % |
+| approx_decycling_number_bafna        |       75.00 % |       0.575102 |       0.558956 |    100.00 % |
+| approx_decycling_number_stanojevic   |       45.00 % |       0.139165 |       0.135570 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       0.177160 |       0.177074 |    100.00 % |
 
 ====================================================================================================
 Treating: V_500_D_80.npz
@@ -281,12 +281,12 @@ Treating: V_500_D_80.npz
 
 | Method                               |     Best Sol % |  Mean Time (s) | Median Time (s) |  Success (%) |
 |-------------------------------------|---------------|---------------|---------------|-------------|
-| approx_decycling_number_bafna        |       85.00 % |       0.648652 |       0.648780 |    100.00 % |
-| approx_decycling_number_stanojevic   |       45.00 % |       0.192825 |       0.191861 |    100.00 % |
-| approx_decycling_number_bar_yehuda   |        0.00 % |       0.248399 |       0.248118 |    100.00 % |
+| approx_decycling_number_bafna        |       85.00 % |       0.640925 |       0.631240 |    100.00 % |
+| approx_decycling_number_stanojevic   |       45.00 % |       0.181533 |       0.176203 |    100.00 % |
+| approx_decycling_number_bar_yehuda   |        0.00 % |       0.238795 |       0.232382 |    100.00 % |
 
 
 ====================================================================================================
-Comparison Benchmark over. Results in 'final_ben_approx_random_big.txt'.
-Total execution time: 5:02:08.885463
+Comparison Benchmark over.
+Total execution time: 4:33:35.355056
 ====================================================================================================

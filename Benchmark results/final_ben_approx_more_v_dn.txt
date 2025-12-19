@@ -1,6 +1,6 @@
 ====================================================================================================
 APPROXIMATION QUALITY BENCHMARK
-Date: Wed Dec 17 09:37:10 2025
+Date: Thu Dec 18 20:01:16 2025
 Timeout per graph: 600s
 ====================================================================================================
 
@@ -10,7 +10,7 @@ Treating: V_100.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -24,7 +24,7 @@ Treating: V_150.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -38,7 +38,7 @@ Treating: V_200.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -52,7 +52,7 @@ Treating: V_250.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -66,7 +66,7 @@ Treating: V_50.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -76,6 +76,6 @@ Treating: V_50.npz
 
 
 ====================================================================================================
-Quality Benchmark over. Results in 'final_ben_approx_more_v_dn.txt'.
-Total execution time: 0:12:22.439531
+Quality Benchmark over.
+Total execution time: 0:05:15.089042
 ====================================================================================================

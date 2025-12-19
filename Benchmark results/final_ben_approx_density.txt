@@ -1,6 +1,6 @@
 ====================================================================================================
 APPROXIMATION QUALITY BENCHMARK
-Date: Wed Dec 17 10:48:52 2025
+Date: Thu Dec 18 20:50:29 2025
 Ref Exact Method: get_decycling_number_xiao
 Timeout per graph: 600s
 ====================================================================================================
@@ -11,7 +11,7 @@ Treating: v_10_D_100.npz
 
   File loaded: 15 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -25,7 +25,7 @@ Treating: v_10_D_25.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -39,7 +39,7 @@ Treating: v_10_D_50.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -53,7 +53,7 @@ Treating: v_10_D_75.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -67,7 +67,7 @@ Treating: v_15_D_100.npz
 
   File loaded: 4 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -81,7 +81,7 @@ Treating: v_15_D_25.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -95,7 +95,7 @@ Treating: v_15_D_50.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -109,7 +109,7 @@ Treating: v_15_D_75.npz
 
   File loaded: 12 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -123,7 +123,7 @@ Treating: v_20_D_100.npz
 
   File loaded: 4 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -137,7 +137,7 @@ Treating: v_20_D_25.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -151,7 +151,7 @@ Treating: v_20_D_50.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -165,7 +165,7 @@ Treating: v_20_D_75.npz
 
   File loaded: 10 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -179,7 +179,7 @@ Treating: v_25_D_100.npz
 
   File loaded: 2 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -193,7 +193,7 @@ Treating: v_25_D_25.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -207,7 +207,7 @@ Treating: v_25_D_50.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -221,7 +221,7 @@ Treating: v_25_D_75.npz
 
   File loaded: 3 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -235,7 +235,7 @@ Treating: v_30_D_100.npz
 
   File loaded: 5 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -249,7 +249,7 @@ Treating: v_30_D_25.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -263,7 +263,7 @@ Treating: v_30_D_50.npz
 
   File loaded: 20 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -277,7 +277,7 @@ Treating: v_30_D_75.npz
 
   File loaded: 11 graphs.
 
-  Results table:
+ Finished tests. See results.
 
 | Method                               | Exact Matches |      Min Ratio |      Max Ratio |     Mean Ratio |   Median Ratio |  Success (%) |  Timeout (%) |
 |-------------------------------------|-----------|---------------|---------------|---------------|-------------|-------------|
@@ -287,6 +287,6 @@ Treating: v_30_D_75.npz
 
 
 ====================================================================================================
-Quality Benchmark over. Results in 'final_ben_approx_density.txt'.
-Total execution time: 1:20:02.641293
+Quality Benchmark over.
+Total execution time: 0:58:10.175632
 ====================================================================================================
