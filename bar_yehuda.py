@@ -134,35 +134,34 @@ def find_maximal_2_3_subgraph(og_G):
     return H
 
 
-def cycle_exists_with_node(G, n):
-    queue = deque()
-    queue.append((n, None))
-    visited = set()
-    visited.add(n)
-
-    while queue:
-        current, parent = queue.popleft()
-        for nb in G.neighbors(current):
-            if nb == parent:
-                continue
-
-            if nb == n:
-                return True
-
-            if nb not in visited:
-                visited.add(nb)
-                queue.append((nb, current))
-
-    return False
-
-
 def get_critical_linkpoints(G, H):
     linkpoints = {n for n in H.nodes if H.degree(n) == 2}
     critical_linkpoints = set()
+    G_prime = nx.subgraph(G, set(G.nodes) - (set(H.nodes)))
+    node_in_component = {}
+    for i, comp in enumerate(nx.connected_components(G_prime)):
+        for node in comp:
+            node_in_component[node] = i
 
     for n in linkpoints:
-        sg = nx.subgraph(G, set(G.nodes) - (set(H.nodes) - {n}))
-        if cycle_exists_with_node(sg, n):
+        visited_components = set()
+        is_critical = False
+
+        for nb in G.neighbors(n):
+            if nb in H.nodes:
+                continue
+
+            # Vérifier si un cycle comprenant n existe dans G\H avec n étant le sommet du cycle appartenant à H
+            if nb in node_in_component:
+                comp = node_in_component[nb]
+                if comp in visited_components:
+                    # Si deux voisins appartiennent à la même composante connexe de G\H, alors il y a un cycle avec n
+                    is_critical = True
+                    break
+
+                visited_components.add(comp)
+
+        if is_critical:
             critical_linkpoints.add(n)
 
     return critical_linkpoints
@@ -185,7 +184,6 @@ def get_set_covering_cycles(H, X, Y):
 
 
 def subG_2_3(G):
-    # Complexité pas linéaire à cause de get_critical_linkpoints
     if nx.is_forest(G):
         return set()
 
