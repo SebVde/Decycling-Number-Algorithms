@@ -477,7 +477,7 @@ def benchmark_approximation_quality(
             formatted_time = str(datetime.timedelta(seconds=total_seconds))
             end_msg = (
                 f"\n{file_separator}\n"
-                f"Quality Benchmark over. Results in '{output_filename}'.\n"
+                f"Quality Benchmark over.\n"
                 f"Total execution time: {formatted_time}\n"
                 f"{file_separator}"
             )
@@ -671,7 +671,7 @@ def benchmark_approximation_quality_with_dn(
             formatted_time = str(datetime.timedelta(seconds=total_seconds))
             end_msg = (
                 f"\n{file_separator}\n"
-                f"Quality Benchmark over. Results in '{output_filename}'.\n"
+                f"Quality Benchmark over.\n"
                 f"Total execution time: {formatted_time}\n"
                 f"{file_separator}"
             )
@@ -879,7 +879,7 @@ def benchmark_approx_comparison(
             formatted_time = str(datetime.timedelta(seconds=total_seconds))
             end_msg = (
                 f"\n{file_separator}\n"
-                f"Comparison Benchmark over. Results in '{output_filename}'.\n"
+                f"Comparison Benchmark over.\n"
                 f"Total execution time: {formatted_time}\n"
                 f"{file_separator}"
             )
