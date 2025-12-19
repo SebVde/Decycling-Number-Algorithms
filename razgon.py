@@ -1,23 +1,18 @@
 import networkx as nx
 
 
-class CycleDetected(Exception):
-    def __init__(self, message):
-        super().__init__(message)
-
-
-# Algorithm taken from the article "Exact Computation of Maximum Induced Forest"
-
-
 def get_cnf(G, T):
     """
-    Computes the set of conflicting vertices in G that are not in T but have at least 2 neighbors in a same connected
-    component of the subgraph of G induced by T.
-        :param G: a networkx graph
-        :param T: a subset of vertices in G
-        :return: a set of vertices representing the conflicting vertices
-    """
+    Computes the set of conflicting vertices in G that are not in T but have at least 2 neighbors
+    in the same connected component of the subgraph of G induced by T.
 
+    Args:
+        G (networkx.Graph): A networkx graph.
+        T (set): A subset of vertices in G.
+
+    Returns:
+        set: A set of vertices representing the conflicting vertices.
+    """
     cnf = set()
     components = list(nx.connected_components(nx.subgraph(G, T)))
 
@@ -25,22 +20,26 @@ def get_cnf(G, T):
         for v in sorted(set(G.nodes) - T):
             # For each connected component from T, check if v has 2 or more neighbors in the component
             for comp in components:
-                neighbors_in_comp = set(nx.neighbors(G, v)) & comp  # & = intersection
+                neighbors_in_comp = set(nx.neighbors(G, v)) & comp
                 if len(neighbors_in_comp) >= 2:
                     cnf.add(v)
-                    break  # Because v only needs to have 2 neighbors in one of the components to be considered conflicting
+                    break  # v only needs 2 neighbors in one component to be conflicting
 
     return cnf
 
 
 def get_bnd(G, T):
     """
-    Computes the boundary vertices of T in G ie the vertices that are not in T but have exactly one neighbor in T.
-        :param G: a networkx graph
-        :param T: a subset of vertices in G
-        :return: a set of vertices representing the boundary vertices of T in G
-    """
+    Computes the boundary vertices of T in G, i.e., the vertices that are not in T but have exactly
+    one neighbor in T.
 
+    Args:
+        G (networkx.Graph): A networkx graph.
+        T (set): A subset of vertices in G.
+
+    Returns:
+        set: A set of vertices representing the boundary vertices of T in G.
+    """
     bnd = set()
 
     for v in set(G.nodes) - T:
@@ -53,14 +52,17 @@ def get_bnd(G, T):
 
 def get_K_connected(G, K, v):
     """
-    Computes the subset of vertices that are K-connected to v.
-    To be K-connected to v, a vertex u in V(G) must be adjacent to v or have a path to v such that the whole path is in K.
-        :param G: a networkx graph
-        :param K: a subset of vertices in G
-        :param v: a vertex in G
-        :return: a set of vertices representing the K-connected vertices to v
-    """
+    Computes the subset of vertices that are K-connected to v. A vertex u is K-connected to v if
+    it is adjacent to v or has a path to v such that the whole path is in K.
 
+    Args:
+        G (networkx.Graph): A networkx graph.
+        K (set): A subset of vertices in G.
+        v: A vertex in G.
+
+    Returns:
+        set: A set of vertices representing the K-connected vertices to v.
+    """
     result = set(nx.neighbors(G, v))
     nb_in_K = result & K
     sg_K = nx.subgraph(G, K)
@@ -75,6 +77,19 @@ def get_K_connected(G, K, v):
 
 
 def T_update(G, T, K, v):
+    """
+    Updates the sets T and K by adding the K-connected vertices to T and removing them from K,
+    and removes conflicting vertices from the graph.
+
+    Args:
+        G (networkx.Graph): A networkx graph.
+        T (set): A subset of vertices in G.
+        K (set): A subset of vertices in G.
+        v: A vertex in G.
+
+    Returns:
+        tuple: A tuple containing the updated graph, T, and K.
+    """
     S = get_K_connected(G, K, v) & K
     new_T = T | S | {v}  # Update T with the K-connected vertices and v
     new_K = K - (S | {v})  # Update K by removing the K-connected vertices and v
@@ -82,11 +97,23 @@ def T_update(G, T, K, v):
     sg = nx.subgraph(
         G, sg_nodes
     )  # Create a subgraph induced by the nodes that are not conflicting with the new T
-    # All these conflicting vertices are removed because they would create cycles in the subgraph
     return sg, new_T, new_K
 
 
 def K_update(G, T, K, W):
+    """
+    Updates the graph G, T, and K based on the set W.
+
+    Args:
+        G (networkx.Graph): A networkx graph.
+        T (set): A subset of vertices in G.
+        K (set): A subset of vertices in G.
+        W (set): A subset of 2 vertices in G.
+
+    Returns:
+        tuple or None: A tuple containing the updated graph, T, and K, or None if the subgraph
+        induced by T, K, and W contains cycles.
+    """
     sg = nx.subgraph(G, T | K | W)
 
     if nx.is_forest(sg):
@@ -112,13 +139,17 @@ def K_update(G, T, K, W):
 
 def find_mif_len(G, T, K):
     """
-    Searches for the length of a (T union K)-MIF of the graph G.
-    :param G: a networkx graph
-    :param T: a subset of vertices in G
-    :param K: a subset of vertices in G
-    :return: the length of a (T union K)-MIF of G
-    """
+    Searches for the length of a (T union K)-MIF of the graph G. A (T union K)-MIF is a maximal
+    induced forest that includes all vertices of T and K.
 
+    Args:
+        G (networkx.Graph): A networkx graph.
+        T (set): A subset of vertices in G.
+        K (set): A subset of vertices in G.
+
+    Returns:
+        int: The length of a (T union K)-MIF of G.
+    """
     if T | K == set(G.nodes):
         return len(T | K)
 
@@ -152,26 +183,16 @@ def find_mif_len(G, T, K):
                 )
 
 
-def get_mif_len(G, K):
-    """
-    Main function to get the length of a K-MIF of a graph G.
-    Given a subset K of V(G), a K-MIF is a largest superset of K such that the subgraph of G induced by K is acyclic.
-        :param G: a networkx graph
-        :param K: a subset of vertices in G
-        :raises CycleDetected: if the subgraph induced by K contains cycles
-        :return: the length of a K-MIF of G
-    """
-
-    if len(K) == 0 or nx.is_forest(nx.subgraph(G, K)):
-        sg_nodes = set(G.nodes) - get_cnf(G, K)
-        sg = nx.subgraph(G, sg_nodes)
-        return find_mif_len(sg, set(), K)
-
-    else:
-        raise CycleDetected(
-            "No K-MIF of G can be found because the subgraph induced by K contains cycles."
-        )
-
-
 def get_decycling_number_razgon(G):
-    return len(set(G.nodes)) - get_mif_len(G, set())
+    """
+    Computes the decycling number of a graph G using Razgon's algorithm.
+
+    Args:
+        G (networkx.Graph): A networkx graph.
+
+    Returns:
+        int: The decycling number of G.
+    """
+    if nx.is_forest(G):
+        return 0
+    return len(set(G.nodes)) - find_mif_len(G, set(), set())
