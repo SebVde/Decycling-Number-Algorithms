@@ -8,6 +8,7 @@ from queue import Empty as QueueEmpty
 import networkx as nx
 import numpy as np
 
+from naive import get_decycling_number_naive
 from razgon import get_decycling_number_razgon
 from fomin import get_decycling_number_fomin
 from xiao import get_decycling_number_xiao
@@ -74,6 +75,7 @@ def benchmark_exact_exec_time(
     methods_list,
     timeout_seconds,
     output_filename,
+    times=3,
 ):
 
     benchmark_start_time = time.perf_counter()
@@ -136,7 +138,7 @@ def benchmark_exact_exec_time(
                         timeout_occurred = False
                         error_occurred = False
 
-                        for _ in range(3):
+                        for _ in range(times):
                             result_queue = multiprocessing.Queue()
                             p = multiprocessing.Process(
                                 target=run_method_get_time_and_result,
@@ -894,6 +896,7 @@ if __name__ == "__main__":
     TIMEOUT_MAX = 600
 
     EXACT_METHODS = [
+        # get_decycling_number_naive,
         get_decycling_number_razgon,
         get_decycling_number_fomin,
         get_decycling_number_xiao,
@@ -904,6 +907,14 @@ if __name__ == "__main__":
         approx_decycling_number_bar_yehuda,
         approx_decycling_number_stanojevic,
     ]
+
+    # benchmark_exact_exec_time(
+    #     directory_path="Benchmark graphs/small for naive",
+    #     methods_list=EXACT_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_small_for_naive.txt",
+    #     times=1,
+    # )
 
     benchmark_exact_exec_time(
         directory_path="Benchmark graphs/random graphs density",
