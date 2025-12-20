@@ -6,7 +6,7 @@ def find_maximal_2_3_subgraph(og_G):
     G = og_G.copy()
     H = nx.Graph()
     H.add_nodes_from(G.nodes())
-    nodes_to_visit = list(G.nodes())
+    nodes_to_visit = deque(G.nodes())
 
     # Chemin actuel
     stack = []
@@ -19,7 +19,7 @@ def find_maximal_2_3_subgraph(og_G):
         if len(stack) == 0:
             start_node = None
             while len(nodes_to_visit) > 0:
-                n = nodes_to_visit.pop(0)
+                n = nodes_to_visit.popleft()
                 if G.degree(n) > 0:
                     start_node = n
                     break
@@ -39,9 +39,21 @@ def find_maximal_2_3_subgraph(og_G):
         u = stack[-1]
         parent = stack[-2] if len(stack) > 1 else None
         nb = list(G.neighbors(u))
+        valid = []
+        edges_to_remove = []
+        for n in nb:
+            if n != parent:
+                if H.degree(n) == 3:
+                    edges_to_remove.append((u, n))
+                else:
+                    valid.append(n)
 
-        # Si pas de voisins du tout ou seul voisin est le parent -> cul de sac
-        if len(nb) == 0 or (len(nb) == 1 and nb[0] == parent):
+        if len(edges_to_remove) > 0:
+            G.remove_edges_from(edges_to_remove)
+
+        # Si pas de voisins du tout, ou seul voisin est le parent, ou tous les voisins (sans compter le parent)
+        # ont un degré 3 dans H -> cul de sac
+        if len(valid) == 0:
             if parent is not None:
                 if G.has_edge(parent, u):
                     G.remove_edge(parent, u)
@@ -52,18 +64,10 @@ def find_maximal_2_3_subgraph(og_G):
                 start_connected = False
             continue
 
-        v = None
-        for neighbor in nb:
-            if neighbor != parent:
-                v = neighbor
-                break
-
-        if H.degree(v) == 3:
-            G.remove_edge(u, v)
-            continue
+        v = valid[0]
 
         # Si v est dans la stack, alors on a un cycle
-        elif v in in_stack:
+        if v in in_stack:
             idx = stack.index(v)
             cycle_nodes = stack[idx:]
             edges_to_add = []
