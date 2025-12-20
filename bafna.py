@@ -78,8 +78,7 @@ def get_fvs(og_G):
     while len(stack) > 0:
         node = stack.pop()
         sg = nx.subgraph_view(og_G, filter_node=lambda n: n not in F or n == node)
-        # With this check, it should ensure that each call for nx.is_forest is in O(|V|) time since |E| < |V|
-        if sg.number_of_edges() <= sg.number_of_nodes() - 1 and nx.is_forest(sg):
+        if nx.is_forest(sg):
             F.remove(node)
 
     return F
