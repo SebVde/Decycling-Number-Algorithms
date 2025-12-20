@@ -2,11 +2,18 @@ import networkx as nx
 
 
 def cleanup(G):
-    while True:
-        to_remove = [node for node in G.nodes if G.degree(node) <= 1]
-        if len(to_remove) == 0:
-            break
-        G.remove_nodes_from(to_remove)
+    queue = [n for n in G.nodes if G.degree(n) <= 1]
+
+    while len(queue) > 0:
+        node = queue.pop()
+        if not G.has_node(node):
+            continue
+
+        neighbors = list(G.neighbors(node))
+        G.remove_node(node)
+        for neighbor in neighbors:
+            if G.degree(neighbor) <= 1:
+                queue.append(neighbor)
 
     return G
 
