@@ -126,7 +126,7 @@ def benchmark_exact_exec_time(
                     continue
 
                 results = {
-                    m.__name__: {"times": [], "timeouts": 0, "errors": 0}
+                    m.__name__: {"times": [], "timeouts": 0, "errors": 0, "success": 0}
                     for m in methods_list
                 }
 
@@ -146,6 +146,7 @@ def benchmark_exact_exec_time(
                             )
                             p.start()
                             p.join(timeout=timeout_seconds)
+                            valid_run = False
 
                             if p.is_alive():
                                 p.terminate()
@@ -164,7 +165,7 @@ def benchmark_exact_exec_time(
                                     else:
                                         duration, val = result
                                         run_times.append(duration)
-
+                                        valid_run = True
                                         if current_graph_result_value is None:
                                             current_graph_result_value = val
                                         elif current_graph_result_value != val:
@@ -316,6 +317,7 @@ def benchmark_approximation_quality(
                     continue
 
                 ratios_results = {m.__name__: [] for m in approx_methods_list}
+                times_results = {m.__name__: [] for m in approx_methods_list}
                 meta_stats = {
                     m.__name__: {"timeouts": 0, "errors": 0, "success": 0}
                     for m in approx_methods_list
@@ -352,6 +354,7 @@ def benchmark_approximation_quality(
                     for method in approx_methods_list:
                         method_name = method.__name__
                         best_k_approx = float("inf")
+                        run_times_per_graph = []
                         valid_run_found = False
                         timeout_occurred = False
                         error_occurred = False
@@ -359,7 +362,7 @@ def benchmark_approximation_quality(
                         for _ in range(3):
                             approx_queue = multiprocessing.Queue()
                             p_approx = multiprocessing.Process(
-                                target=run_method_get_result,
+                                target=run_approx_method_get_result_and_time,
                                 args=(method, graph, approx_queue),
                             )
                             p_approx.start()
@@ -373,13 +376,15 @@ def benchmark_approximation_quality(
                                 error_occurred = True
                             else:
                                 try:
-                                    res_approx = approx_queue.get_nowait()
-                                    if isinstance(res_approx, Exception):
+                                    res = approx_queue.get_nowait()
+                                    if isinstance(res, Exception):
                                         error_occurred = True
                                     else:
+                                        res_k, res_t = res
                                         valid_run_found = True
-                                        if res_approx < best_k_approx:
-                                            best_k_approx = res_approx
+                                        run_times_per_graph.append(res_t)
+                                        if res_k < best_k_approx:
+                                            best_k_approx = res_k
                                 except QueueEmpty:
                                     error_occurred = True
 
@@ -390,6 +395,8 @@ def benchmark_approximation_quality(
                             else:
                                 ratio = best_k_approx / k_opt
                             ratios_results[method_name].append(ratio)
+                            if run_times_per_graph:
+                                times_results[method_name].extend(run_times_per_graph)
 
                         else:
                             if timeout_occurred:
@@ -412,6 +419,7 @@ def benchmark_approximation_quality(
                 col_val = 14
                 col_pct = 12
                 col_exact = 10
+                col_time = 14
 
                 table_header = (
                     f"| {'Method':<{col_methode}} "
@@ -420,6 +428,8 @@ def benchmark_approximation_quality(
                     f"| {'Max Ratio':>{col_val}} "
                     f"| {'Mean Ratio':>{col_val}} "
                     f"| {'Median Ratio':>{col_val}} "
+                    f"| {'Mean Time (s)':>{col_time}} "
+                    f"| {'Median Time (s)':>{col_time}} "
                     f"| {'Success (%)':>{col_pct}} "
                     f"| {'Timeout (%)':>{col_pct}} |"
                 )
@@ -430,6 +440,9 @@ def benchmark_approximation_quality(
                     f"|{'-' * (col_val + 1)}"
                     f"|{'-' * (col_val + 1)}"
                     f"|{'-' * (col_val + 1)}"
+                    f"|{'-' * (col_val + 1)}"
+                    f"|{'-' * (col_time + 1)}"
+                    f"|{'-' * (col_time + 1)}"
                     f"|{'-' * (col_pct + 1)}"
                     f"|{'-' * (col_pct + 1)}|"
                 )
@@ -443,6 +456,8 @@ def benchmark_approximation_quality(
 
                 for method_name, ratios_list in ratios_results.items():
                     ratios_arr = np.array(ratios_list)
+                    times_list = times_results.get(method_name, [])
+                    times_arr = np.array(times_list)
                     stats = meta_stats[method_name]
                     success_pct = (stats["success"] / effective_total) * 100
                     timeout_pct = (stats["timeouts"] / effective_total) * 100
@@ -453,9 +468,14 @@ def benchmark_approximation_quality(
                         r_mean = f"{np.mean(ratios_arr):.4f}"
                         r_median = f"{np.median(ratios_arr):.4f}"
                         r_exact_matches = np.sum(ratios_arr == 1.0)
-
                     else:
                         r_mean = r_median = r_max = r_min = r_exact_matches = "---"
+
+                    if len(times_arr) > 0:
+                        rt_mean = f"{np.mean(times_arr):.6f}"
+                        rt_median = f"{np.median(times_arr):.6f}"
+                    else:
+                        rt_mean = rt_median = "---"
 
                     row_data = (
                         f"| {method_name:<{col_methode}} "
@@ -464,6 +484,8 @@ def benchmark_approximation_quality(
                         f"| {r_max:>{col_val}} "
                         f"| {r_mean:>{col_val}} "
                         f"| {r_median:>{col_val}} "
+                        f"| {rt_mean:>{col_time}} "
+                        f"| {rt_median:>{col_time}} "
                         f"| {success_pct:>{col_pct - 3}.2f} % "
                         f"| {timeout_pct:>{col_pct - 3}.2f} % |"
                     )
@@ -534,6 +556,7 @@ def benchmark_approximation_quality_with_dn(
                     continue
 
                 ratios_results = {m.__name__: [] for m in approx_methods_list}
+                times_results = {m.__name__: [] for m in approx_methods_list}
                 meta_stats = {
                     m.__name__: {"timeouts": 0, "errors": 0, "success": 0}
                     for m in approx_methods_list
@@ -546,6 +569,7 @@ def benchmark_approximation_quality_with_dn(
                     for method in approx_methods_list:
                         method_name = method.__name__
                         best_k_approx = float("inf")
+                        run_times_per_graph = []
                         valid_run_found = False
                         timeout_occurred = False
                         error_occurred = False
@@ -553,7 +577,7 @@ def benchmark_approximation_quality_with_dn(
                         for _ in range(3):
                             approx_queue = multiprocessing.Queue()
                             p_approx = multiprocessing.Process(
-                                target=run_method_get_result,
+                                target=run_approx_method_get_result_and_time,
                                 args=(method, graph, approx_queue),
                             )
                             p_approx.start()
@@ -567,13 +591,15 @@ def benchmark_approximation_quality_with_dn(
                                 error_occurred = True
                             else:
                                 try:
-                                    res_approx = approx_queue.get_nowait()
-                                    if isinstance(res_approx, Exception):
+                                    res = approx_queue.get_nowait()
+                                    if isinstance(res, Exception):
                                         error_occurred = True
                                     else:
+                                        res_k, res_t = res
                                         valid_run_found = True
-                                        if res_approx < best_k_approx:
-                                            best_k_approx = res_approx
+                                        run_times_per_graph.append(res_t)
+                                        if res_k < best_k_approx:
+                                            best_k_approx = res_k
                                 except QueueEmpty:
                                     error_occurred = True
 
@@ -585,6 +611,8 @@ def benchmark_approximation_quality_with_dn(
                                 ratio = best_k_approx / k_opt
 
                             ratios_results[method_name].append(ratio)
+                            if run_times_per_graph:
+                                times_results[method_name].extend(run_times_per_graph)
 
                         else:
                             if timeout_occurred:
@@ -607,6 +635,7 @@ def benchmark_approximation_quality_with_dn(
                 col_val = 14
                 col_pct = 12
                 col_exact = 10
+                col_time = 14
 
                 table_header = (
                     f"| {'Method':<{col_methode}} "
@@ -615,6 +644,8 @@ def benchmark_approximation_quality_with_dn(
                     f"| {'Max Ratio':>{col_val}} "
                     f"| {'Mean Ratio':>{col_val}} "
                     f"| {'Median Ratio':>{col_val}} "
+                    f"| {'Mean Time (s)':>{col_time}} "
+                    f"| {'Median Time (s)':>{col_time}} "
                     f"| {'Success (%)':>{col_pct}} "
                     f"| {'Timeout (%)':>{col_pct}} |"
                 )
@@ -625,6 +656,9 @@ def benchmark_approximation_quality_with_dn(
                     f"|{'-' * (col_val + 1)}"
                     f"|{'-' * (col_val + 1)}"
                     f"|{'-' * (col_val + 1)}"
+                    f"|{'-' * (col_val + 1)}"
+                    f"|{'-' * (col_time + 1)}"
+                    f"|{'-' * (col_time + 1)}"
                     f"|{'-' * (col_pct + 1)}"
                     f"|{'-' * (col_pct + 1)}|"
                 )
@@ -638,6 +672,8 @@ def benchmark_approximation_quality_with_dn(
 
                 for method_name, ratios_list in ratios_results.items():
                     ratios_arr = np.array(ratios_list)
+                    times_list = times_results.get(method_name, [])
+                    times_arr = np.array(times_list)
                     stats = meta_stats[method_name]
                     success_pct = (stats["success"] / effective_total) * 100
                     timeout_pct = (stats["timeouts"] / effective_total) * 100
@@ -651,6 +687,12 @@ def benchmark_approximation_quality_with_dn(
                     else:
                         r_mean = r_median = r_max = r_min = r_exact_matches = "---"
 
+                    if len(times_arr) > 0:
+                        rt_mean = f"{np.mean(times_arr):.6f}"
+                        rt_median = f"{np.median(times_arr):.6f}"
+                    else:
+                        rt_mean = rt_median = "---"
+
                     row_data = (
                         f"| {method_name:<{col_methode}} "
                         f"| {r_exact_matches:>{col_exact}} "
@@ -658,6 +700,8 @@ def benchmark_approximation_quality_with_dn(
                         f"| {r_max:>{col_val}} "
                         f"| {r_mean:>{col_val}} "
                         f"| {r_median:>{col_val}} "
+                        f"| {rt_mean:>{col_time}} "
+                        f"| {rt_median:>{col_time}} "
                         f"| {success_pct:>{col_pct - 3}.2f} % "
                         f"| {timeout_pct:>{col_pct - 3}.2f} % |"
                     )
@@ -737,6 +781,7 @@ def benchmark_approx_comparison(
                         "wins": 0,
                         "timeouts": 0,
                         "errors": 0,
+                        "success": 0,
                     }
                     for m in methods_list
                 }
@@ -748,7 +793,7 @@ def benchmark_approx_comparison(
                         method_name = method.__name__
 
                         best_run_k = float("inf")
-                        best_run_time = 0
+                        run_times_per_graph = []
 
                         run_valid = False
                         timeout_occurred = False
@@ -776,20 +821,19 @@ def benchmark_approx_comparison(
                                         error_occurred = True
                                     else:
                                         k_val, t_val = res
-
+                                        run_times_per_graph.append(t_val)
                                         if k_val < best_run_k:
                                             best_run_k = k_val
-                                            best_run_time = t_val
                                             run_valid = True
                                         elif k_val == best_run_k:
-                                            pass
-
+                                            run_valid = True
                                 except QueueEmpty:
                                     error_occurred = True
 
                         if run_valid:
-                            stats[method_name]["times"].append(best_run_time)
+                            stats[method_name]["times"].extend(run_times_per_graph)
                             stats[method_name]["results"].append(best_run_k)
+                            stats[method_name]["success"] += 1
                             current_graph_results[method_name] = best_run_k
                         else:
                             if timeout_occurred:
@@ -827,12 +871,13 @@ def benchmark_approx_comparison(
 
                 rows = []
                 for method_name, data in stats.items():
-                    num_success = len(data["times"])
+                    num_runs = len(data["times"])
+                    num_success = data["success"]
                     success_pct = (num_success / total_graphs) * 100
                     win_pct = (data["wins"] / total_graphs) * 100
                     times_arr = np.array(data["times"])
 
-                    if num_success > 0:
+                    if num_runs > 0:
                         s_mean = np.mean(times_arr)
                         s_median = np.median(times_arr)
                     else:
@@ -896,7 +941,7 @@ if __name__ == "__main__":
     TIMEOUT_MAX = 600
 
     EXACT_METHODS = [
-        get_decycling_number_naive,
+        # get_decycling_number_naive,
         get_decycling_number_razgon,
         get_decycling_number_fomin,
         get_decycling_number_xiao,
@@ -908,13 +953,13 @@ if __name__ == "__main__":
         approx_decycling_number_stanojevic,
     ]
 
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/small for naive",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_small_for_naive.txt",
-        times=1,
-    )
+    # benchmark_exact_exec_time(
+    #     directory_path="Benchmark graphs/small for naive",
+    #     methods_list=EXACT_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_small_for_naive.txt",
+    #     times=1,
+    # )
 
     # benchmark_exact_exec_time(
     #     directory_path="Benchmark graphs/random graphs density",
@@ -986,32 +1031,32 @@ if __name__ == "__main__":
     #     output_filename="Benchmark results/final_ben_vert_conn.txt",
     # )
     #
-    # benchmark_approximation_quality(
-    #     directory_path="Benchmark graphs/random graphs density",
-    #     approx_methods_list=APPROX_METHODS,
-    #     exact_method_func=get_decycling_number_xiao,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_approx_random_density.txt",
-    # )
-    #
-    # benchmark_approximation_quality(
-    #     directory_path="Benchmark graphs/density",
-    #     approx_methods_list=APPROX_METHODS,
-    #     exact_method_func=get_decycling_number_xiao,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_approx_density.txt",
-    # )
-    #
-    # benchmark_approximation_quality_with_dn(
-    #     directory_path="Benchmark graphs/more vertices with dn",
-    #     approx_methods_list=APPROX_METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_approx_more_v_dn.txt",
-    # )
-    #
-    # benchmark_approx_comparison(
-    #     directory_path="Benchmark graphs/random big",
-    #     methods_list=APPROX_METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_approx_random_big.txt",
-    # )
+    benchmark_approximation_quality(
+        directory_path="Benchmark graphs/random graphs density",
+        approx_methods_list=APPROX_METHODS,
+        exact_method_func=get_decycling_number_xiao,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/4final_ben_approx_random_density.txt",
+    )
+
+    benchmark_approximation_quality(
+        directory_path="Benchmark graphs/density",
+        approx_methods_list=APPROX_METHODS,
+        exact_method_func=get_decycling_number_xiao,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/4final_ben_approx_density.txt",
+    )
+
+    benchmark_approximation_quality_with_dn(
+        directory_path="Benchmark graphs/more vertices with dn",
+        approx_methods_list=APPROX_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/4final_ben_approx_more_v_dn.txt",
+    )
+
+    benchmark_approx_comparison(
+        directory_path="Benchmark graphs/random big",
+        methods_list=APPROX_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/4final_ben_approx_random_big.txt",
+    )
