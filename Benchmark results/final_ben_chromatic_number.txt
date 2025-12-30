@@ -1,6 +1,6 @@
 ================================================================================
 BENCHMARK RESULTS
-Date: Tue Dec 16 22:51:50 2025
+Date: Tue Dec 30 10:23:01 2025
 Treated folder: C:\Unif\Memoire\Benchmark graphs\chromatic number
 Timeout per graph: 600s
 ================================================================================
@@ -11,13 +11,13 @@ Treating: V_10_CN_2.npz
 
   File loaded: 20 graphs.
 
-  Finished tests. Results incoming...
+  Finished tests. See results.
 
 | Method                        |      Min (s) |      Max (s) |     Mean (s) |   Median (s) |  Success (%) |  Timeout (%) |   Errors (%) |
 |------------------------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
-| get_decycling_number_razgon   |     0.001828 |     0.010641 |     0.004826 |     0.003653 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_fomin    |     0.001830 |     0.031639 |     0.014693 |     0.013872 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_xiao     |     0.001253 |     0.027751 |     0.007878 |     0.003567 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_razgon   |     0.001819 |     0.010730 |     0.004755 |     0.003510 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_fomin    |     0.001917 |     0.030618 |     0.014461 |     0.013900 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_xiao     |     0.001237 |     0.030440 |     0.007865 |     0.003710 |    100.00 % |      0.00 % |      0.00 % |
 
 ================================================================================
 Treating: V_10_CN_3.npz
@@ -25,13 +25,13 @@ Treating: V_10_CN_3.npz
 
   File loaded: 20 graphs.
 
-  Finished tests. Results incoming...
+  Finished tests. See results.
 
 | Method                        |      Min (s) |      Max (s) |     Mean (s) |   Median (s) |  Success (%) |  Timeout (%) |   Errors (%) |
 |------------------------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
-| get_decycling_number_razgon   |     0.001616 |     0.010151 |     0.003888 |     0.002781 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_fomin    |     0.001379 |     0.029232 |     0.008987 |     0.004667 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_xiao     |     0.001176 |     0.015633 |     0.004333 |     0.001612 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_razgon   |     0.001551 |     0.010325 |     0.003828 |     0.002693 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_fomin    |     0.001186 |     0.029276 |     0.008855 |     0.004678 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_xiao     |     0.001179 |     0.015164 |     0.004269 |     0.001710 |    100.00 % |      0.00 % |      0.00 % |
 
 ================================================================================
 Treating: V_10_CN_4.npz
@@ -39,13 +39,13 @@ Treating: V_10_CN_4.npz
 
   File loaded: 20 graphs.
 
-  Finished tests. Results incoming...
+  Finished tests. See results.
 
 | Method                        |      Min (s) |      Max (s) |     Mean (s) |   Median (s) |  Success (%) |  Timeout (%) |   Errors (%) |
 |------------------------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
-| get_decycling_number_razgon   |     0.001866 |     0.012274 |     0.007207 |     0.008121 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_fomin    |     0.001513 |     0.029111 |     0.018191 |     0.020482 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_xiao     |     0.001972 |     0.018715 |     0.007463 |     0.005228 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_razgon   |     0.001802 |     0.012194 |     0.007058 |     0.007794 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_fomin    |     0.001450 |     0.032236 |     0.018085 |     0.020195 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_xiao     |     0.001954 |     0.018751 |     0.007410 |     0.005256 |    100.00 % |      0.00 % |      0.00 % |
 
 ================================================================================
 Treating: V_10_CN_5.npz
@@ -53,13 +53,13 @@ Treating: V_10_CN_5.npz
 
   File loaded: 20 graphs.
 
-  Finished tests. Results incoming...
+  Finished tests. See results.
 
 | Method                        |      Min (s) |      Max (s) |     Mean (s) |   Median (s) |  Success (%) |  Timeout (%) |   Errors (%) |
 |------------------------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
-| get_decycling_number_razgon   |     0.002226 |     0.010958 |     0.006798 |     0.007045 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_fomin    |     0.001782 |     0.028985 |     0.018731 |     0.020340 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_xiao     |     0.002865 |     0.021210 |     0.012156 |     0.011116 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_razgon   |     0.002216 |     0.010925 |     0.006673 |     0.006944 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_fomin    |     0.001829 |     0.028601 |     0.018470 |     0.020384 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_xiao     |     0.002838 |     0.020774 |     0.011972 |     0.011090 |    100.00 % |      0.00 % |      0.00 % |
 
 ================================================================================
 Treating: V_10_CN_6.npz
@@ -67,15 +67,15 @@ Treating: V_10_CN_6.npz
 
   File loaded: 20 graphs.
 
-  Finished tests. Results incoming...
+  Finished tests. See results.
 
 | Method                        |      Min (s) |      Max (s) |     Mean (s) |   Median (s) |  Success (%) |  Timeout (%) |   Errors (%) |
 |------------------------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
-| get_decycling_number_razgon   |     0.002694 |     0.011316 |     0.007829 |     0.008725 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_fomin    |     0.002091 |     0.026784 |     0.020120 |     0.021879 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_xiao     |     0.004247 |     0.020977 |     0.010633 |     0.010124 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_razgon   |     0.002579 |     0.011130 |     0.007730 |     0.008538 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_fomin    |     0.002163 |     0.027375 |     0.019900 |     0.021524 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_xiao     |     0.004182 |     0.021062 |     0.010573 |     0.010118 |    100.00 % |      0.00 % |      0.00 % |
 
 
 ================================================================================
 Benchmark over.
-Total execution time: 0:12:02.984500
+Total execution time: 0:05:00.181286

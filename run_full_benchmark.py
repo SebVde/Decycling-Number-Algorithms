@@ -75,7 +75,6 @@ def benchmark_exact_exec_time(
     methods_list,
     timeout_seconds,
     output_filename,
-    times=3,
 ):
 
     benchmark_start_time = time.perf_counter()
@@ -138,7 +137,7 @@ def benchmark_exact_exec_time(
                         timeout_occurred = False
                         error_occurred = False
 
-                        for _ in range(times):
+                        for _ in range(3):
                             result_queue = multiprocessing.Queue()
                             p = multiprocessing.Process(
                                 target=run_method_get_time_and_result,
@@ -146,7 +145,6 @@ def benchmark_exact_exec_time(
                             )
                             p.start()
                             p.join(timeout=timeout_seconds)
-                            valid_run = False
 
                             if p.is_alive():
                                 p.terminate()
@@ -165,7 +163,6 @@ def benchmark_exact_exec_time(
                                     else:
                                         duration, val = result
                                         run_times.append(duration)
-                                        valid_run = True
                                         if current_graph_result_value is None:
                                             current_graph_result_value = val
                                         elif current_graph_result_value != val:
@@ -180,13 +177,12 @@ def benchmark_exact_exec_time(
                                     error_occurred = True
                                     break
 
-                        if timeout_occurred:
+                        if run_times:
+                            results[method_name]["times"].extend(run_times)
+                        elif timeout_occurred:
                             results[method_name]["timeouts"] += 1
                         elif error_occurred:
                             results[method_name]["errors"] += 1
-                        elif run_times:
-                            median_time = np.median(run_times)
-                            results[method_name]["times"].append(median_time)
 
                     if current_graph_result_value is None:
                         file_results_values.append("Error/Timeout")
@@ -232,7 +228,7 @@ def benchmark_exact_exec_time(
 
                     timeout_percent = (num_timeouts / total_graphs) * 100
                     error_percent = (num_errors / total_graphs) * 100
-                    success_percent = (num_success / total_graphs) * 100
+                    success_percent = ((num_success / 3) / total_graphs) * 100
 
                     if num_success > 0:
                         s_min = f"{np.min(times_sec):.6f}"
@@ -372,13 +368,16 @@ def benchmark_approximation_quality(
                                 p_approx.terminate()
                                 p_approx.join()
                                 timeout_occurred = True
+                                break
                             elif p_approx.exitcode != 0:
                                 error_occurred = True
+                                break
                             else:
                                 try:
                                     res = approx_queue.get_nowait()
                                     if isinstance(res, Exception):
                                         error_occurred = True
+                                        break
                                     else:
                                         res_k, res_t = res
                                         valid_run_found = True
@@ -387,6 +386,7 @@ def benchmark_approximation_quality(
                                             best_k_approx = res_k
                                 except QueueEmpty:
                                     error_occurred = True
+                                    break
 
                         if valid_run_found:
                             meta_stats[method_name]["success"] += 1
@@ -587,13 +587,16 @@ def benchmark_approximation_quality_with_dn(
                                 p_approx.terminate()
                                 p_approx.join()
                                 timeout_occurred = True
+                                break
                             elif p_approx.exitcode != 0:
                                 error_occurred = True
+                                break
                             else:
                                 try:
                                     res = approx_queue.get_nowait()
                                     if isinstance(res, Exception):
                                         error_occurred = True
+                                        break
                                     else:
                                         res_k, res_t = res
                                         valid_run_found = True
@@ -602,6 +605,7 @@ def benchmark_approximation_quality_with_dn(
                                             best_k_approx = res_k
                                 except QueueEmpty:
                                     error_occurred = True
+                                    break
 
                         if valid_run_found:
                             meta_stats[method_name]["success"] += 1
@@ -812,13 +816,16 @@ def benchmark_approx_comparison(
                                 p.terminate()
                                 p.join()
                                 timeout_occurred = True
+                                break
                             elif p.exitcode != 0:
                                 error_occurred = True
+                                break
                             else:
                                 try:
                                     res = q.get_nowait()
                                     if isinstance(res, Exception):
                                         error_occurred = True
+                                        break
                                     else:
                                         k_val, t_val = res
                                         run_times_per_graph.append(t_val)
@@ -829,6 +836,7 @@ def benchmark_approx_comparison(
                                             run_valid = True
                                 except QueueEmpty:
                                     error_occurred = True
+                                    break
 
                         if run_valid:
                             stats[method_name]["times"].extend(run_times_per_graph)
@@ -953,90 +961,89 @@ if __name__ == "__main__":
         approx_decycling_number_stanojevic,
     ]
 
-    # benchmark_exact_exec_time(
-    #     directory_path="Benchmark graphs/small for naive",
-    #     methods_list=EXACT_METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_small_for_naive.txt",
-    #     times=1,
-    # )
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/small for naive",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/final_ben_small_for_naive.txt",
+    )
 
-    # benchmark_exact_exec_time(
-    #     directory_path="Benchmark graphs/random graphs density",
-    #     methods_list=EXACT_METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_random_density.txt",
-    # )
-    #
-    # benchmark_exact_exec_time(
-    #     directory_path="Benchmark graphs/density",
-    #     methods_list=EXACT_METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_density.txt",
-    # )
-    #
-    # benchmark_exact_exec_time(
-    #     directory_path="Benchmark graphs/chromatic number",
-    #     methods_list=EXACT_METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_chromatic_number.txt",
-    # )
-    #
-    # benchmark_exact_exec_time(
-    #     directory_path="Benchmark graphs/diameter",
-    #     methods_list=EXACT_METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_diameter.txt",
-    # )
-    #
-    # benchmark_exact_exec_time(
-    #     directory_path="Benchmark graphs/domination number",
-    #     methods_list=EXACT_METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_domination_number.txt",
-    # )
-    #
-    # benchmark_exact_exec_time(
-    #     directory_path="Benchmark graphs/girth",
-    #     methods_list=EXACT_METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_girth.txt",
-    # )
-    #
-    # benchmark_exact_exec_time(
-    #     directory_path="Benchmark graphs/longest induced cycle",
-    #     methods_list=EXACT_METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_long_ind_cyc.txt",
-    # )
-    #
-    # benchmark_exact_exec_time(
-    #     directory_path="Benchmark graphs/radius",
-    #     methods_list=EXACT_METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_radius.txt",
-    # )
-    #
-    # benchmark_exact_exec_time(
-    #     directory_path="Benchmark graphs/treewidth",
-    #     methods_list=EXACT_METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_treewidth.txt",
-    # )
-    #
-    # benchmark_exact_exec_time(
-    #     directory_path="Benchmark graphs/vertex connectivity",
-    #     methods_list=EXACT_METHODS,
-    #     timeout_seconds=TIMEOUT_MAX,
-    #     output_filename="Benchmark results/final_ben_vert_conn.txt",
-    # )
-    #
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/random graphs density",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/final_ben_random_density.txt",
+    )
+
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/density",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/final_ben_density.txt",
+    )
+
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/chromatic number",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/final_ben_chromatic_number.txt",
+    )
+
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/diameter",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/final_ben_diameter.txt",
+    )
+
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/domination number",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/final_ben_domination_number.txt",
+    )
+
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/girth",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/final_ben_girth.txt",
+    )
+
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/longest induced cycle",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/final_ben_long_ind_cyc.txt",
+    )
+
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/radius",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/final_ben_radius.txt",
+    )
+
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/treewidth",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/final_ben_treewidth.txt",
+    )
+
+    benchmark_exact_exec_time(
+        directory_path="Benchmark graphs/vertex connectivity",
+        methods_list=EXACT_METHODS,
+        timeout_seconds=TIMEOUT_MAX,
+        output_filename="Benchmark results/final_ben_vert_conn.txt",
+    )
+
     benchmark_approximation_quality(
         directory_path="Benchmark graphs/random graphs density",
         approx_methods_list=APPROX_METHODS,
         exact_method_func=get_decycling_number_xiao,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/4final_ben_approx_random_density.txt",
+        output_filename="Benchmark results/final_ben_approx_random_density.txt",
     )
 
     benchmark_approximation_quality(
@@ -1044,19 +1051,19 @@ if __name__ == "__main__":
         approx_methods_list=APPROX_METHODS,
         exact_method_func=get_decycling_number_xiao,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/4final_ben_approx_density.txt",
+        output_filename="Benchmark results/final_ben_approx_density.txt",
     )
 
     benchmark_approximation_quality_with_dn(
         directory_path="Benchmark graphs/more vertices with dn",
         approx_methods_list=APPROX_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/4final_ben_approx_more_v_dn.txt",
+        output_filename="Benchmark results/final_ben_approx_more_v_dn.txt",
     )
 
     benchmark_approx_comparison(
         directory_path="Benchmark graphs/random big",
         methods_list=APPROX_METHODS,
         timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/4final_ben_approx_random_big.txt",
+        output_filename="Benchmark results/final_ben_approx_random_big.txt",
     )

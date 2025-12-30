@@ -1,6 +1,6 @@
 ================================================================================
 BENCHMARK RESULTS
-Date: Wed Dec 17 00:56:56 2025
+Date: Tue Dec 30 11:40:17 2025
 Treated folder: C:\Unif\Memoire\Benchmark graphs\vertex connectivity
 Timeout per graph: 600s
 ================================================================================
@@ -11,13 +11,13 @@ Treating: V_20_VCon_1.npz
 
   File loaded: 20 graphs.
 
-  Finished tests. Results incoming...
+  Finished tests. See results.
 
 | Method                        |      Min (s) |      Max (s) |     Mean (s) |   Median (s) |  Success (%) |  Timeout (%) |   Errors (%) |
 |------------------------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
-| get_decycling_number_razgon   |     0.095494 |     0.167519 |     0.138372 |     0.137868 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_fomin    |     0.163892 |     0.391761 |     0.270920 |     0.245035 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_xiao     |     0.015454 |     0.022702 |     0.019014 |     0.018864 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_razgon   |     0.095598 |     0.145466 |     0.128945 |     0.130338 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_fomin    |     0.145422 |     0.379617 |     0.245206 |     0.218902 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_xiao     |     0.014167 |     0.023362 |     0.017738 |     0.016939 |    100.00 % |      0.00 % |      0.00 % |
 
 ================================================================================
 Treating: V_20_VCon_2.npz
@@ -25,13 +25,13 @@ Treating: V_20_VCon_2.npz
 
   File loaded: 20 graphs.
 
-  Finished tests. Results incoming...
+  Finished tests. See results.
 
 | Method                        |      Min (s) |      Max (s) |     Mean (s) |   Median (s) |  Success (%) |  Timeout (%) |   Errors (%) |
 |------------------------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
-| get_decycling_number_razgon   |     0.096184 |     0.478077 |     0.164520 |     0.152498 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_fomin    |     0.343032 |     0.613104 |     0.488578 |     0.511047 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_xiao     |     0.041017 |     0.424467 |     0.209112 |     0.210902 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_razgon   |     0.088659 |     0.449433 |     0.156589 |     0.140151 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_fomin    |     0.309218 |     0.585501 |     0.458997 |     0.483993 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_xiao     |     0.038632 |     0.403420 |     0.192440 |     0.191815 |    100.00 % |      0.00 % |      0.00 % |
 
 ================================================================================
 Treating: V_20_VCon_3.npz
@@ -39,13 +39,13 @@ Treating: V_20_VCon_3.npz
 
   File loaded: 20 graphs.
 
-  Finished tests. Results incoming...
+  Finished tests. See results.
 
 | Method                        |      Min (s) |      Max (s) |     Mean (s) |   Median (s) |  Success (%) |  Timeout (%) |   Errors (%) |
 |------------------------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
-| get_decycling_number_razgon   |     0.142611 |     1.390325 |     0.760058 |     0.934692 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_fomin    |     0.749485 |     2.356774 |     1.503482 |     1.546344 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_xiao     |     0.351625 |     1.299189 |     0.746970 |     0.766507 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_razgon   |     0.135089 |     1.349467 |     0.739157 |     0.929057 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_fomin    |     0.718519 |     2.353153 |     1.469965 |     1.526311 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_xiao     |     0.328060 |     1.262274 |     0.719022 |     0.737781 |    100.00 % |      0.00 % |      0.00 % |
 
 ================================================================================
 Treating: V_20_VCon_4.npz
@@ -53,13 +53,13 @@ Treating: V_20_VCon_4.npz
 
   File loaded: 20 graphs.
 
-  Finished tests. Results incoming...
+  Finished tests. See results.
 
 | Method                        |      Min (s) |      Max (s) |     Mean (s) |   Median (s) |  Success (%) |  Timeout (%) |   Errors (%) |
 |------------------------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
-| get_decycling_number_razgon   |     0.332954 |     1.210803 |     0.931095 |     0.978831 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_fomin    |     0.510130 |     2.255367 |     1.780673 |     1.859475 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_xiao     |     0.275567 |     1.706735 |     0.832534 |     0.813395 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_razgon   |     0.327331 |     1.179735 |     0.914252 |     0.960959 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_fomin    |     0.488199 |     2.242819 |     1.752675 |     1.829566 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_xiao     |     0.256254 |     1.659759 |     0.808619 |     0.795461 |    100.00 % |      0.00 % |      0.00 % |
 
 ================================================================================
 Treating: V_20_VCon_5.npz
@@ -67,15 +67,15 @@ Treating: V_20_VCon_5.npz
 
   File loaded: 20 graphs.
 
-  Finished tests. Results incoming...
+  Finished tests. See results.
 
 | Method                        |      Min (s) |      Max (s) |     Mean (s) |   Median (s) |  Success (%) |  Timeout (%) |   Errors (%) |
 |------------------------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
-| get_decycling_number_razgon   |     0.825447 |     1.078278 |     0.958419 |     0.961336 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_fomin    |     1.328522 |     2.290485 |     1.816242 |     1.788446 |    100.00 % |      0.00 % |      0.00 % |
-| get_decycling_number_xiao     |     0.750602 |     1.449034 |     1.052061 |     1.032639 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_razgon   |     0.787508 |     1.057475 |     0.936771 |     0.942995 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_fomin    |     1.287065 |     2.184163 |     1.764473 |     1.728912 |    100.00 % |      0.00 % |      0.00 % |
+| get_decycling_number_xiao     |     0.732522 |     1.394960 |     1.014023 |     0.996884 |    100.00 % |      0.00 % |      0.00 % |
 
 
 ================================================================================
 Benchmark over.
-Total execution time: 0:23:47.949475
+Total execution time: 0:16:08.921895
