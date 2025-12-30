@@ -272,7 +272,6 @@ def benchmark_approximation_quality(
     timeout_seconds,
     output_filename,
 ):
-
     benchmark_start_time = time.perf_counter()
 
     if not os.path.isdir(directory_path):
@@ -427,6 +426,7 @@ def benchmark_approximation_quality(
                     f"| {'Min Ratio':>{col_val}} "
                     f"| {'Max Ratio':>{col_val}} "
                     f"| {'Mean Ratio':>{col_val}} "
+                    f"| {'Std Ratio':>{col_val}} "
                     f"| {'Median Ratio':>{col_val}} "
                     f"| {'Mean Time (s)':>{col_time}} "
                     f"| {'Median Time (s)':>{col_time}} "
@@ -437,6 +437,7 @@ def benchmark_approximation_quality(
                 table_separator = (
                     f"|{'-' * (col_methode + 1)}"
                     f"|{'-' * (col_exact + 1)}"
+                    f"|{'-' * (col_val + 1)}"
                     f"|{'-' * (col_val + 1)}"
                     f"|{'-' * (col_val + 1)}"
                     f"|{'-' * (col_val + 1)}"
@@ -467,9 +468,12 @@ def benchmark_approximation_quality(
                         r_max = f"{np.max(ratios_arr):.4f}"
                         r_mean = f"{np.mean(ratios_arr):.4f}"
                         r_median = f"{np.median(ratios_arr):.4f}"
+                        r_std = f"{np.std(ratios_arr):.4f}"
                         r_exact_matches = np.sum(ratios_arr == 1.0)
                     else:
-                        r_mean = r_median = r_max = r_min = r_exact_matches = "---"
+                        r_mean = r_median = r_max = r_min = r_std = r_exact_matches = (
+                            "---"
+                        )
 
                     if len(times_arr) > 0:
                         rt_mean = f"{np.mean(times_arr):.6f}"
@@ -483,6 +487,7 @@ def benchmark_approximation_quality(
                         f"| {r_min:>{col_val}} "
                         f"| {r_max:>{col_val}} "
                         f"| {r_mean:>{col_val}} "
+                        f"| {r_std:>{col_val}} "
                         f"| {r_median:>{col_val}} "
                         f"| {rt_mean:>{col_time}} "
                         f"| {rt_median:>{col_time}} "
@@ -517,7 +522,6 @@ def benchmark_approximation_quality_with_dn(
     timeout_seconds,
     output_filename,
 ):
-
     benchmark_start_time = time.perf_counter()
 
     if not os.path.isdir(directory_path):
@@ -647,6 +651,7 @@ def benchmark_approximation_quality_with_dn(
                     f"| {'Min Ratio':>{col_val}} "
                     f"| {'Max Ratio':>{col_val}} "
                     f"| {'Mean Ratio':>{col_val}} "
+                    f"| {'Std Ratio':>{col_val}} "
                     f"| {'Median Ratio':>{col_val}} "
                     f"| {'Mean Time (s)':>{col_time}} "
                     f"| {'Median Time (s)':>{col_time}} "
@@ -657,6 +662,7 @@ def benchmark_approximation_quality_with_dn(
                 table_separator = (
                     f"|{'-' * (col_methode + 1)}"
                     f"|{'-' * (col_exact + 1)}"
+                    f"|{'-' * (col_val + 1)}"
                     f"|{'-' * (col_val + 1)}"
                     f"|{'-' * (col_val + 1)}"
                     f"|{'-' * (col_val + 1)}"
@@ -687,9 +693,12 @@ def benchmark_approximation_quality_with_dn(
                         r_max = f"{np.max(ratios_arr):.4f}"
                         r_mean = f"{np.mean(ratios_arr):.4f}"
                         r_median = f"{np.median(ratios_arr):.4f}"
+                        r_std = f"{np.std(ratios_arr):.4f}"
                         r_exact_matches = np.sum(ratios_arr == 1.0)
                     else:
-                        r_mean = r_median = r_max = r_min = r_exact_matches = "---"
+                        r_mean = r_median = r_max = r_min = r_std = r_exact_matches = (
+                            "---"
+                        )
 
                     if len(times_arr) > 0:
                         rt_mean = f"{np.mean(times_arr):.6f}"
@@ -703,6 +712,7 @@ def benchmark_approximation_quality_with_dn(
                         f"| {r_min:>{col_val}} "
                         f"| {r_max:>{col_val}} "
                         f"| {r_mean:>{col_val}} "
+                        f"| {r_std:>{col_val}} "
                         f"| {r_median:>{col_val}} "
                         f"| {rt_mean:>{col_time}} "
                         f"| {rt_median:>{col_time}} "
@@ -961,82 +971,82 @@ if __name__ == "__main__":
         approx_decycling_number_stanojevic,
     ]
 
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/small for naive",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_small_for_naive.txt",
-    )
-
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/random graphs density",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_random_density.txt",
-    )
-
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/density",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_density.txt",
-    )
-
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/chromatic number",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_chromatic_number.txt",
-    )
-
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/diameter",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_diameter.txt",
-    )
-
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/domination number",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_domination_number.txt",
-    )
-
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/girth",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_girth.txt",
-    )
-
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/longest induced cycle",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_long_ind_cyc.txt",
-    )
-
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/radius",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_radius.txt",
-    )
-
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/treewidth",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_treewidth.txt",
-    )
-
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/vertex connectivity",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_vert_conn.txt",
-    )
+    # benchmark_exact_exec_time(
+    #     directory_path="Benchmark graphs/small for naive",
+    #     methods_list=EXACT_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_small_for_naive.txt",
+    # )
+    #
+    # benchmark_exact_exec_time(
+    #     directory_path="Benchmark graphs/random graphs density",
+    #     methods_list=EXACT_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_random_density.txt",
+    # )
+    #
+    # benchmark_exact_exec_time(
+    #     directory_path="Benchmark graphs/density",
+    #     methods_list=EXACT_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_density.txt",
+    # )
+    #
+    # benchmark_exact_exec_time(
+    #     directory_path="Benchmark graphs/chromatic number",
+    #     methods_list=EXACT_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_chromatic_number.txt",
+    # )
+    #
+    # benchmark_exact_exec_time(
+    #     directory_path="Benchmark graphs/diameter",
+    #     methods_list=EXACT_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_diameter.txt",
+    # )
+    #
+    # benchmark_exact_exec_time(
+    #     directory_path="Benchmark graphs/domination number",
+    #     methods_list=EXACT_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_domination_number.txt",
+    # )
+    #
+    # benchmark_exact_exec_time(
+    #     directory_path="Benchmark graphs/girth",
+    #     methods_list=EXACT_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_girth.txt",
+    # )
+    #
+    # benchmark_exact_exec_time(
+    #     directory_path="Benchmark graphs/longest induced cycle",
+    #     methods_list=EXACT_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_long_ind_cyc.txt",
+    # )
+    #
+    # benchmark_exact_exec_time(
+    #     directory_path="Benchmark graphs/radius",
+    #     methods_list=EXACT_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_radius.txt",
+    # )
+    #
+    # benchmark_exact_exec_time(
+    #     directory_path="Benchmark graphs/treewidth",
+    #     methods_list=EXACT_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_treewidth.txt",
+    # )
+    #
+    # benchmark_exact_exec_time(
+    #     directory_path="Benchmark graphs/vertex connectivity",
+    #     methods_list=EXACT_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_vert_conn.txt",
+    # )
 
     benchmark_approximation_quality(
         directory_path="Benchmark graphs/random graphs density",
@@ -1046,24 +1056,24 @@ if __name__ == "__main__":
         output_filename="Benchmark results/final_ben_approx_random_density.txt",
     )
 
-    benchmark_approximation_quality(
-        directory_path="Benchmark graphs/density",
-        approx_methods_list=APPROX_METHODS,
-        exact_method_func=get_decycling_number_xiao,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_approx_density.txt",
-    )
-
-    benchmark_approximation_quality_with_dn(
-        directory_path="Benchmark graphs/more vertices with dn",
-        approx_methods_list=APPROX_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_approx_more_v_dn.txt",
-    )
-
-    benchmark_approx_comparison(
-        directory_path="Benchmark graphs/random big",
-        methods_list=APPROX_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_approx_random_big.txt",
-    )
+    # benchmark_approximation_quality(
+    #     directory_path="Benchmark graphs/density",
+    #     approx_methods_list=APPROX_METHODS,
+    #     exact_method_func=get_decycling_number_xiao,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_approx_density.txt",
+    # )
+    #
+    # benchmark_approximation_quality_with_dn(
+    #     directory_path="Benchmark graphs/more vertices with dn",
+    #     approx_methods_list=APPROX_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_approx_more_v_dn.txt",
+    # )
+    #
+    # benchmark_approx_comparison(
+    #     directory_path="Benchmark graphs/random big",
+    #     methods_list=APPROX_METHODS,
+    #     timeout_seconds=TIMEOUT_MAX,
+    #     output_filename="Benchmark results/final_ben_approx_random_big.txt",
+    # )
