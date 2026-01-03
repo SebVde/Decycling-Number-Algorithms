@@ -992,38 +992,10 @@ if __name__ == "__main__":
     )
 
     benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/chromatic number",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_chromatic_number.txt",
-    )
-
-    benchmark_exact_exec_time(
         directory_path="Benchmark graphs/diameter",
         methods_list=EXACT_METHODS,
         timeout_seconds=TIMEOUT_MAX,
         output_filename="Benchmark results/final_ben_diameter.txt",
-    )
-
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/domination number",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_domination_number.txt",
-    )
-
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/girth",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_girth.txt",
-    )
-
-    benchmark_exact_exec_time(
-        directory_path="Benchmark graphs/longest induced cycle",
-        methods_list=EXACT_METHODS,
-        timeout_seconds=TIMEOUT_MAX,
-        output_filename="Benchmark results/final_ben_long_ind_cyc.txt",
     )
 
     benchmark_exact_exec_time(
