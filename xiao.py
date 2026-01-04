@@ -3,6 +3,20 @@ import networkx as nx
 
 
 def get_generalized_neighbors(G, F, active_v, v):
+    """
+    Return the generalized neighbors of node v in graph G.
+    The generalized neighborhood is defined as the neighbors of v that are
+    not in set F, plus vertices that share a common neighbor (belonging to F excluding the active vertex) with v .
+
+    Args:
+        G (networkx.Graph): A networkx graph.
+        F: Set of vertices.
+        active_v: Currently active vertex (may be None).
+        v: Vertex for which generalized neighbors are computed.
+
+    Returns:
+        set: Set of generalized neighbors of v.
+    """
     gen_nb = set(nx.neighbors(G, v)) - F
     excl = {active_v} if active_v is not None else set()
     ens = set(nx.neighbors(G, v)) & (F - excl)
@@ -13,6 +27,15 @@ def get_generalized_neighbors(G, F, active_v, v):
 
 
 def get_non_trivial_components(G):
+    """
+    Return connected components of G that have size greater than 1.
+
+    Args:
+        G (networkx.Graph): A networkx graph.
+
+    Returns:
+        list: List of sets, each containing the vertices of a connected component of size > 1.
+    """
     components = []
     for c in nx.connected_components(G):
         if len(c) > 1:
@@ -22,10 +45,23 @@ def get_non_trivial_components(G):
 
 
 def find_short_pair(G, F, active_v):
+    """
+    Find a short-pair of vertices (u, v).
+
+    A cycle is a short-cycle if it contains exactly 2 vertices that do not belong to F.
+    These two vertices form a short-pair if the active vertex is undefined or not adjacent to either of them.
+
+    Args:
+        G (networkx.Graph): A networkx graph.
+        F: Set of vertices.
+        active_v: Currently active vertex (may be None).
+
+    Returns:
+        tuple: (u, v) if found, otherwise (None, None).
+    """
     for u, v in itertools.combinations(sorted(set(G.nodes) - F), 2):
         nb_u = set(nx.neighbors(G, u))
         nb_v = set(nx.neighbors(G, v))
-        # If parallel edges between u and v (so u,v is a short-cycle) or they have a common neighbor in F (also short-cycle)
         if (G.number_of_edges(u, v) > 1) or (
             G.number_of_edges(u, v) == 1 and any(w in F for w in nb_u & nb_v)
         ):
@@ -36,6 +72,18 @@ def find_short_pair(G, F, active_v):
 
 
 def is_trigger_vertex(G, F, active_v, v):
+    """
+    Checks if vertex v is a trigger-vertex according to the paper's definition.
+
+    Args:
+        G (networkx.Graph): A networkx graph.
+        F: Set of vertices.
+        active_v: Currently active vertex.
+        v: Candidate vertex to test.
+
+    Returns:
+        bool: True if v is a trigger-vertex, False otherwise.
+    """
     nb_active = set(nx.neighbors(G, active_v))
     for u in sorted(nb_active - F):
         gen_nb = get_generalized_neighbors(G, F, active_v, u)
@@ -60,6 +108,17 @@ def is_trigger_vertex(G, F, active_v, v):
 
 
 def find_optimal_v(G, F, active_v):
+    """
+    Select an optimal vertex to process next according to the paper's rules.
+
+    Args:
+        G (networkx.Graph): A networkx graph.
+        F: A set of vertices.
+        active_v: Currently active vertex.
+
+    Returns:
+        int: an optimal vertex.
+    """
     nb_active = set(nx.neighbors(G, active_v))
     G_not_F = set(G.nodes) - F
     possible = set()
@@ -92,6 +151,18 @@ def find_optimal_v(G, F, active_v):
 
 
 def main_procedure(G, F, active_v):
+    """
+    Main procedure described in the paper.
+    This procedure is called on reduced graphs and computes the MIF length.
+
+    Args:
+        G (networkx.Graph): A networkx graph.
+        F: Set of vertices.
+        active_v: Currently active vertex (may be None).
+
+    Returns:
+        int: a MIF size for G given fixed set F.
+    """
     a, b = find_short_pair(G, F, active_v)
     if a is not None and b is not None:
         return max(
@@ -215,12 +286,22 @@ def main_procedure(G, F, active_v):
 
 
 def get_mif_len(G, F, active_v):
+    """
+    Reduces the graph G according to the paper's rules and computes the size of a maximum induced forest (MIF).
+
+    Args:
+        G (networkx.Graph): A networkx graph.
+        F: Set of vertices fixed to be in the induced forest.
+        active_v: Currently active vertex (may be None).
+
+    Returns:
+        int: Size of a maximum induced forest in G given fixed set F.
+    """
     if len(F) > 1 and not nx.is_forest(nx.subgraph(G, F)):
         print("Can't reduce cause F is not acyclic")
         return Exception
 
     new_G = nx.MultiGraph(G)
-    # Security measure but shouldn't be necessary, the code shouldn't provoque this case
     new_F = set(F) - set([n for n in F if n not in set(G.nodes)])
     S = set()
 
@@ -295,6 +376,15 @@ def get_mif_len(G, F, active_v):
 
 
 def get_decycling_number_xiao(G):
+    """
+    Computes the decycling number of a graph G using Xiao's algorithm.
+
+    Args:
+        G (networkx.Graph): A networkx graph.
+
+    Returns:
+        int: Decycling number of G (0 if G is already a forest).
+    """
     if nx.is_forest(G):
         return 0
 

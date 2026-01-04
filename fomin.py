@@ -45,8 +45,8 @@ def construct_H(G, F, nb):
 
     Args:
         G (networkx.Graph): A networkx graph.
-        F (set): A set of nodes in G.
-        nb (set): A set of neighbors in G.
+        F: A set of nodes in G.
+        nb: A set of neighbors in G.
 
     Returns:
         networkx.Graph: The constructed subgraph H.
