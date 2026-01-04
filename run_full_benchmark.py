@@ -21,6 +21,16 @@ sys.setrecursionlimit(10000)
 
 
 def parse_npz_file(file_path, has_dn=False):
+    """
+    Parses a .npz file containing adjacency matrices and returns a list of NetworkX graphs.
+
+    Args:
+        file_path (str): The path to the .npz file.
+        has_dn (bool): Whether the decycling numbers are included in the file or not.
+
+    Returns:
+        list: A list of NetworkX graphs.
+    """
     graphs = []
     try:
         with np.load(file_path, allow_pickle=True) as data:
@@ -41,31 +51,42 @@ def parse_npz_file(file_path, has_dn=False):
     return graphs
 
 
-def run_method_get_time_and_result(method_func, graph_data, result_queue):
+def run_method_get_result_and_time(method_func, graph_data, result_queue):
+    """
+    Runs a method function on the given graph data, and adds the computed value and execution time to the result queue.
+
+    Args:
+        method_func (function): The method function to run.
+        graph_data (networkx.Graph): The graph to process.
+        result_queue (multiprocessing.Queue): The queue to store the result and execution time.
+
+    Returns:
+        None
+    """
     try:
         start_time = time.perf_counter()
         result_value = method_func(graph_data)
         end_time = time.perf_counter()
-        result_queue.put((end_time - start_time, result_value))
+        result_queue.put((result_value, end_time - start_time))
     except Exception as e:
         result_queue.put(e)
 
 
 def run_method_get_result(method_func, graph_data, result_queue):
+    """
+    Runs a method function on the given graph data, and adds the computed value to the result queue.
+
+    Args:
+        method_func (function): The method function to run.
+        graph_data (networkx.Graph): The graph to process.
+        result_queue (multiprocessing.Queue): The queue to store the result and execution time.
+
+    Returns:
+        None
+    """
     try:
         result = method_func(graph_data)
         result_queue.put(result)
-    except Exception as e:
-        result_queue.put(e)
-
-
-def run_approx_method_get_result_and_time(method_func, graph_data, result_queue):
-    try:
-        start_time = time.perf_counter()
-        k = method_func(graph_data)
-        end_time = time.perf_counter()
-        duration = end_time - start_time
-        result_queue.put((k, duration))
     except Exception as e:
         result_queue.put(e)
 
@@ -76,7 +97,19 @@ def benchmark_exact_exec_time(
     timeout_seconds,
     output_filename,
 ):
+    """
+    Benchmarks the exact execution time of given methods on graphs stored in .npz files within a directory.
+    The results are written to an output file.
 
+    Args:
+        directory_path (str): The path to the directory containing .npz files.
+        methods_list (list): A list of method functions to benchmark.
+        timeout_seconds (int): The timeout in seconds for each graph processing.
+        output_filename (str): The name of the output file to store benchmark results.
+
+    Returns:
+        None
+    """
     benchmark_start_time = time.perf_counter()
 
     if not os.path.isdir(directory_path):
@@ -116,7 +149,7 @@ def benchmark_exact_exec_time(
                     graphs_in_file = parse_npz_file(filepath)
                     total_graphs = len(graphs_in_file)
                     if total_graphs == 0:
-                        # Skip le fichier
+                        # Skip file
                         continue
                     f_out.write(f"  File loaded: {total_graphs} graphs.\n")
 
@@ -140,7 +173,7 @@ def benchmark_exact_exec_time(
                         for _ in range(3):
                             result_queue = multiprocessing.Queue()
                             p = multiprocessing.Process(
-                                target=run_method_get_time_and_result,
+                                target=run_method_get_result_and_time,
                                 args=(method, graph, result_queue),
                             )
                             p.start()
@@ -161,7 +194,7 @@ def benchmark_exact_exec_time(
                                         error_occurred = True
                                         break
                                     else:
-                                        duration, val = result
+                                        val, duration = result
                                         run_times.append(duration)
                                         if current_graph_result_value is None:
                                             current_graph_result_value = val
@@ -272,6 +305,20 @@ def benchmark_approximation_quality(
     timeout_seconds,
     output_filename,
 ):
+    """
+    Benchmarks the execution time and approximation quality of given methods against the computed exact value on graphs stored
+    in .npz files within a directory.
+
+    Args:
+        directory_path (str): The path to the directory containing .npz files.
+        approx_methods_list (list): A list of approximation method functions to benchmark.
+        exact_method_func (function): The exact method function to compute the reference value.
+        timeout_seconds (int): The timeout in seconds for each graph processing.
+        output_filename (str): The name of the output file to store benchmark results.
+
+    Returns:
+        None
+    """
     benchmark_start_time = time.perf_counter()
 
     if not os.path.isdir(directory_path):
@@ -333,7 +380,7 @@ def benchmark_approximation_quality(
                         p_exact.terminate()
                         p_exact.join()
                         skipped_graphs_exact_fail += 1
-                        # Skip ce graphe
+                        # Skip graph
                         continue
 
                     try:
@@ -357,7 +404,7 @@ def benchmark_approximation_quality(
                         for _ in range(3):
                             approx_queue = multiprocessing.Queue()
                             p_approx = multiprocessing.Process(
-                                target=run_approx_method_get_result_and_time,
+                                target=run_method_get_result_and_time,
                                 args=(method, graph, approx_queue),
                             )
                             p_approx.start()
@@ -522,6 +569,19 @@ def benchmark_approximation_quality_with_dn(
     timeout_seconds,
     output_filename,
 ):
+    """
+    Benchmarks the execution time and approximation quality of given methods against known decycling numbers on graphs
+    stored in .npz files within a directory. The decycling numbers are stored in the files.
+
+    Args:
+        directory_path (str): The path to the directory containing .npz files.
+        approx_methods_list (list): A list of approximation method functions to benchmark.
+        timeout_seconds (int): The timeout in seconds for each graph processing.
+        output_filename (str): The name of the output file to store benchmark results.
+
+    Returns:
+        None
+    """
     benchmark_start_time = time.perf_counter()
 
     if not os.path.isdir(directory_path):
@@ -581,7 +641,7 @@ def benchmark_approximation_quality_with_dn(
                         for _ in range(3):
                             approx_queue = multiprocessing.Queue()
                             p_approx = multiprocessing.Process(
-                                target=run_approx_method_get_result_and_time,
+                                target=run_method_get_result_and_time,
                                 args=(method, graph, approx_queue),
                             )
                             p_approx.start()
@@ -747,7 +807,19 @@ def benchmark_approx_comparison(
     timeout_seconds,
     output_filename="benchmark_comparison_results.txt",
 ):
+    """
+    Benchmarks the execution time and compares the best approximation frequency for given approximation methods
+    on graphs stored in .npz files within a directory.
 
+    Args:
+        directory_path (str): The path to the directory containing .npz files.
+        methods_list (list): A list of approximation method functions to benchmark.
+        timeout_seconds (int): The timeout in seconds for each graph processing.
+        output_filename (str): The name of the output file to store benchmark results.
+
+    Returns:
+        None
+    """
     benchmark_start_time = time.perf_counter()
 
     if not os.path.isdir(directory_path):
@@ -816,7 +888,7 @@ def benchmark_approx_comparison(
                         for _ in range(3):
                             q = multiprocessing.Queue()
                             p = multiprocessing.Process(
-                                target=run_approx_method_get_result_and_time,
+                                target=run_method_get_result_and_time,
                                 args=(method, graph, q),
                             )
                             p.start()
