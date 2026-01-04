@@ -74,13 +74,13 @@ def find_semidisjoint_cycle(G):
 
 def get_fvs(og_G):
     """
-    Computes an approximate FVS using a weight-reduction approach described in Bafna et al.'s paper.
+    Computes an approximate minimal FVS using a weight-reduction approach described in Bafna et al.'s paper.
 
     Args:
         og_G (nx.Graph): The input graph.
 
     Returns:
-        set: A set of nodes forming the approximate FVS.
+        set: A set of nodes forming the approximate minimal FVS.
     """
     F = set()
     stack = []

@@ -227,13 +227,13 @@ def get_set_covering_cycles(H, X, Y):
 
 def subG_2_3(G):
     """
-    Approximates a FVS for G using Bar-Yehuda's algorithm.
+    Approximates a minimal FVS for G using Bar-Yehuda's algorithm.
 
     Args:
         G (nx.Graph): The input graph.
 
     Returns:
-        set: An approximated FVS for G.
+        set: An approximated minimal FVS for G.
     """
     if nx.is_forest(G):
         return set()
