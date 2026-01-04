@@ -2,6 +2,15 @@ import networkx as nx
 
 
 def cleanup(G):
+    """
+    Iteratively removes nodes with degree <= 1 from the graph.
+
+    Args:
+        G (nx.Graph): The input graph to clean.
+
+    Returns:
+        nx.Graph: The cleaned graph.
+    """
     queue = [n for n in G.nodes if G.degree(n) <= 1]
 
     while len(queue) > 0:
@@ -19,6 +28,17 @@ def cleanup(G):
 
 
 def find_semidisjoint_cycle(G):
+    """
+    Identifies a semi-disjoint cycle.
+    A semi-disjoint cycle is a cycle formed only by degree-2 nodes, with one possible exception.
+
+    Args:
+        G (nx.Graph): The input graph.
+
+    Returns:
+        list or None: A list of nodes forming the semi-disjoint cycle or path+junction,
+                      or None if no such structure is found.
+    """
     degree_2 = {n for n, d in G.degree() if d == 2}
     if len(degree_2) == 0:
         return None
@@ -53,6 +73,15 @@ def find_semidisjoint_cycle(G):
 
 
 def get_fvs(og_G):
+    """
+    Computes an approximate FVS using a weight-reduction approach described in Bafna et al.'s paper.
+
+    Args:
+        og_G (nx.Graph): The input graph.
+
+    Returns:
+        set: A set of nodes forming the approximate FVS.
+    """
     F = set()
     stack = []
     G = og_G.copy()
@@ -85,6 +114,15 @@ def get_fvs(og_G):
 
 
 def approx_decycling_number_bafna(G):
+    """
+    Approximates the decycling number of a graph using Bafna's algorithm.
+
+    Args:
+        G (nx.Graph): The input graph.
+
+    Returns:
+        int: An approximated decycling number.
+    """
     clean_G = cleanup(G.copy())
     fvs = get_fvs(clean_G)
     return len(fvs)
