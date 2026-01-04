@@ -3,16 +3,27 @@ from collections import deque
 
 
 def find_maximal_2_3_subgraph(og_G):
+    """
+    Finds a maximal subgraph of the input graph where all nodes have degree 2 or 3.
+    This function iteratively constructs a subgraph by identifying cycles and paths
+    that can be added while maintaining the degree constraints.
+
+    Args:
+        og_G (nx.Graph): The input graph.
+
+    Returns:
+        nx.Graph: A maximal subgraph of the input graph where all nodes have degree 2 or 3.
+    """
     G = og_G.copy()
     H = nx.Graph()
     H.add_nodes_from(G.nodes())
     nodes_to_visit = deque(G.nodes())
 
-    # Chemin actuel
+    # Current path
     stack = []
     in_stack = set()
 
-    # stack[0] est connecté à un noeud de H de degré 2?
+    # Is stack[0] connected to H by a degree 2 node?
     start_connected = False
 
     while True:
@@ -25,7 +36,7 @@ def find_maximal_2_3_subgraph(og_G):
                     break
 
             if start_node is None:
-                # Plus de noeuds à visiter
+                # No more nodes to visit
                 break
 
             stack = [start_node]
@@ -35,7 +46,7 @@ def find_maximal_2_3_subgraph(og_G):
             else:
                 start_connected = False
 
-        # Extrémité du chemin actuel
+        # Extract the extremity of the path
         u = stack[-1]
         parent = stack[-2] if len(stack) > 1 else None
         nb = list(G.neighbors(u))
@@ -51,22 +62,21 @@ def find_maximal_2_3_subgraph(og_G):
         if len(edges_to_remove) > 0:
             G.remove_edges_from(edges_to_remove)
 
-        # Si pas de voisins du tout, ou seul voisin est le parent, ou tous les voisins (sans compter le parent)
-        # ont un degré 3 dans H -> cul de sac
+        # If no valid neighbors, backtrack
         if len(valid) == 0:
             if parent is not None:
                 if G.has_edge(parent, u):
                     G.remove_edge(parent, u)
             in_stack.remove(stack.pop())
 
-            # Reset si la stack est vide
+            # Reset if stack is empty
             if len(stack) == 0:
                 start_connected = False
             continue
 
         v = valid[0]
 
-        # Si v est dans la stack, alors on a un cycle
+        # If v is already in stack -> cycle detected
         if v in in_stack:
             idx = stack.index(v)
             cycle_nodes = stack[idx:]
@@ -77,17 +87,16 @@ def find_maximal_2_3_subgraph(og_G):
             H.add_edges_from(edges_to_add)
             G.remove_edges_from(edges_to_add)
 
-            # Si idx == 0, cycle formé par tous les sommets de la stack
+            # Handle cycle cases
             if idx == 0:
                 stack = []
                 in_stack = set()
                 start_connected = False
-
             else:
                 stack = stack[: idx + 1]
                 in_stack = set(stack)
-                # Le bout de la pile (v) est connecté à H
-                # Si le début est connecté, alors c'est un chemin valide à ajouter
+                # The end of the stack (v) is connected to H
+                # If the start is connected, then it's a valid path to add
                 if start_connected:
                     path_edges = []
                     for i in range(len(stack) - 1):
@@ -97,18 +106,16 @@ def find_maximal_2_3_subgraph(og_G):
                     stack = []
                     in_stack = set()
                     start_connected = False
-
                 else:
-                    # La pile est inversée pour essayer d'attacher le début du chemin à H ou un autre cycle
+                    # The stack is reversed to try to connect the start of the path to H or another cycle
                     stack.reverse()
-                    # v était à la fin de la stack, maintenant au début donc le début est connecté à H
+                    # v was at the end of the stack, now at the beginning so the start of the stack is connected to H
                     start_connected = True
 
             continue
 
         elif H.degree(v) == 2:
-            # v est déjà dans H et à un degré 2 donc la connexion du chemin dans stack est possible à v
-            # Si le début est connecté, alors c'est un chemin valide à ajouter
+            # Connect path to v if start is connected
             if start_connected:
                 path_edges = []
                 for i in range(len(stack) - 1):
@@ -119,7 +126,6 @@ def find_maximal_2_3_subgraph(og_G):
                 stack = []
                 in_stack = set()
                 start_connected = False
-
             else:
                 stack.append(v)
                 in_stack.add(v)
@@ -127,7 +133,7 @@ def find_maximal_2_3_subgraph(og_G):
                 start_connected = True
             continue
 
-        # v est degré 0 ou 1 dans H, on peut l'ajouter au chemin
+        # v has degree 0 or 1 in H, we can add it to the path
         else:
             stack.append(v)
             in_stack.add(v)
@@ -139,6 +145,18 @@ def find_maximal_2_3_subgraph(og_G):
 
 
 def get_critical_linkpoints(G, H):
+    """
+    Identifies critical linkpoints in the subgraph.
+    A critical linkpoint v is a node of degree 2 in H such that removing
+    all the nodes of H except v from G creates a cycle including v.
+
+    Args:
+        G (nx.Graph): The original graph.
+        H (nx.Graph): The maximal subgraph with degree 2 or 3 nodes.
+
+    Returns:
+        set: The set of critical linkpoints.
+    """
     linkpoints = {n for n in H.nodes if H.degree(n) == 2}
     critical_linkpoints = set()
     G_prime = nx.subgraph(G, set(G.nodes) - (set(H.nodes)))
@@ -155,11 +173,11 @@ def get_critical_linkpoints(G, H):
             if nb in H.nodes:
                 continue
 
-            # Vérifier si un cycle comprenant n existe dans G\H avec n étant le sommet du cycle appartenant à H
+            # Verify if a cycle including n exists in G\H with n being the vertex of the cycle belonging to H
             if nb in node_in_component:
                 comp = node_in_component[nb]
                 if comp in visited_components:
-                    # Si deux voisins appartiennent à la même composante connexe de G\H, alors il y a un cycle avec n
+                    # If two neighbors belong to the same connected component of G\H, then there is a cycle with n
                     is_critical = True
                     break
 
@@ -172,10 +190,30 @@ def get_critical_linkpoints(G, H):
 
 
 def is_cycle(G):
+    """
+    Checks if the graph is a cycle.
+
+    Args:
+        G (nx.Graph): The input graph.
+
+    Returns:
+        bool: True if the graph is a cycle, False otherwise.
+    """
     return all(G.degree(n) == 2 for n in G.nodes)
 
 
 def get_set_covering_cycles(H, X, Y):
+    """
+    Finds a set of nodes that cover all cycles in the subgraph excluding critical linkpoints and high-degree nodes.
+
+    Args:
+        H (nx.Graph): The subgraph with degree 2 or 3 nodes.
+        X: Set of critical linkpoints.
+        Y: Nodes with degree = 3 in H.
+
+    Returns:
+        set: A set of nodes covering all cycles in the subgraph.
+    """
     sg = nx.subgraph(H, set(H.nodes) - X - Y)
     cover_set = set()
 
@@ -188,6 +226,15 @@ def get_set_covering_cycles(H, X, Y):
 
 
 def subG_2_3(G):
+    """
+    Approximates a FVS for G using Bar-Yehuda's algorithm.
+
+    Args:
+        G (nx.Graph): The input graph.
+
+    Returns:
+        set: An approximated FVS for G.
+    """
     if nx.is_forest(G):
         return set()
 
@@ -199,4 +246,13 @@ def subG_2_3(G):
 
 
 def approx_decycling_number_bar_yehuda(G):
+    """
+    Approximates the decycling number of the graph using Bar-Yehuda's algorithm.
+
+    Args:
+        G (nx.Graph): The input graph.
+
+    Returns:
+        int: The approximated decycling number.
+    """
     return len(subG_2_3(G))
