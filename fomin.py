@@ -207,6 +207,7 @@ def get_max_indep_set(G):
         return 0
 
     if nx.number_connected_components(G) > 1:
+        # If G is disconnected, compute the size of a maximum independent set for each component separately
         res = 0
         for c in nx.connected_components(G):
             res += get_max_indep_set(G.subgraph(c))
@@ -214,6 +215,7 @@ def get_max_indep_set(G):
         return res
 
     for u, v in itertools.combinations(sorted(G.nodes, key=sort_nodes), 2):
+        # If one node's neighborhood is a subset of the other's, we remove the node with the larger neighborhood
         nb_u = set(nx.neighbors(G, u))
         nb_v = set(nx.neighbors(G, v))
         if (nb_v | {v}).issubset(nb_u | {u}):
@@ -228,9 +230,12 @@ def get_max_indep_set(G):
         deg = comb[1]
         anti_edges = get_anti_edges(G, v)
         if (deg < 4 and is_foldable(G, v)) or (deg == 4 and len(anti_edges) < 4):
+            # Fold the graph at v
             return 1 + get_max_indep_set(fold_graph(G, v, anti_edges))
 
     v = max(node_degrees, key=lambda x: x[1])[0]
+    # As a last resort, explore both subproblems of including and excluding v (having maximum degree)
+    # from a maximum independent set
     return max(
         get_max_indep_set(nx.subgraph(G, G.nodes - {v} - get_mirrors(G, v))),
         1 + get_max_indep_set(nx.subgraph(G, G.nodes - {v} - set(nx.neighbors(G, v)))),
@@ -298,7 +303,7 @@ def get_mif_len(G, F, active_v):
         new_G = G.copy()
         new_F = set(F)
         for T in get_non_trivial_components(sg_F):
-            # Get all neighbors of T in G and need to remove those with more than 1 connection to T
+            # Get all neighbors of T in G. We need to remove those with more than 1 connection to T
             nb_T = set()
             for v in T:
                 nb_T.update(set(G.neighbors(v)))
